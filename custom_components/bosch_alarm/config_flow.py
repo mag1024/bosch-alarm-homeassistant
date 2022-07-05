@@ -44,7 +44,7 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
     try:
         await panel.connect(Panel.LOAD_BASIC_INFO)
     finally:
-        panel.disconnect()
+        await panel.disconnect()
 
     # Return info that you want to store in the config entry.
     return (panel.model, panel.serial_number)
@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="Bosch %s" % model, data=user_input)
-        except (ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
+        except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
             errors["base"] = "cannot_connect"
         except PermissionError:
             errors["base"] = "invalid_auth"
