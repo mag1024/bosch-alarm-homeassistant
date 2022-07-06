@@ -58,12 +58,36 @@ class PointSensor(BinarySensorEntity):
 
     @property
     def should_poll(self): return False
-    
+
+class ConnectionStatusSensor(BinarySensorEntity):
+    def __init__(self, panel, unique_id):
+        self._panel = panel
+        self._unique_id = unique_id
+        panel.connection_status_attach(self.async_schedule_update_ha_state)
+
+    @property
+    def name(self): return f"{self._panel.model} Connection Status"
+
+    @property
+    def is_on(self): return self._panel.connection_status()
+
+    @property
+    def unique_id(self): return self._unique_id
+
+    @property
+    def device_class(self): return BinarySensorDeviceClass.CONNECTIVITY
+
+    @property
+    def should_poll(self): return False
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the UPB light based on a config entry."""
 
     panel = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [ConnectionStatusSensor(panel,
+            f'{panel.serial_number}_connection_status')])
     async_add_entities(
             PointSensor(point, f'{panel.serial_number}_point_{id}')
                 for (id, point) in panel.points.items())
