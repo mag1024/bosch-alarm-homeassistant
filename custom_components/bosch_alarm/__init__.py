@@ -13,6 +13,7 @@ from homeassistant.const import (
 )
 
 import asyncio
+import logging
 import bosch_alarm_mode2
 
 from .const import (
@@ -20,6 +21,7 @@ from .const import (
 )
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
@@ -27,12 +29,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             passcode=entry.data[CONF_PASSWORD])
-    await panel.connect()
+    try:
+        await panel.connect()
+    except asyncio.exceptions.TimeoutError:
+        _LOGGER.warning("Initial panel connection timed out...")
+    except:
+        logging.exception("Initial panel connection failed")
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    setup = lambda: hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    if panel.connection_status():
+        setup()
+    else:
+        panel.connection_status_attach(
+                lambda: panel.connection_status() and setup())
 
     return True
 

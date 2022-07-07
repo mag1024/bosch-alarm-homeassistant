@@ -86,8 +86,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     panel = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [ConnectionStatusSensor(panel,
-            f'{panel.serial_number}_connection_status')])
+            [ConnectionStatusSensor(
+                panel, f'{panel.serial_number}_connection_status')])
     async_add_entities(
             PointSensor(point, f'{panel.serial_number}_point_{id}')
                 for (id, point) in panel.points.items())
