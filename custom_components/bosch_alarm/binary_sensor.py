@@ -33,11 +33,27 @@ def _guess_device_class(name):
         return BinarySensorDeviceClass.TAMPER
     return None
 
-class PointSensor(BinarySensorEntity):
-    def __init__(self, point, unique_id):
-        self._point = point
+class PanelBinarySensor(BinarySensorEntity):
+    def __init__(self, attach, unique_id):
+        self._attach = attach
         self._unique_id = unique_id
-        point.attach(self.async_schedule_update_ha_state)
+
+    @property
+    def unique_id(self): return self._unique_id
+
+    @property
+    def should_poll(self): return False
+
+    async def async_added_to_hass(self):
+        self._attach(self.async_schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        self._attach(None)
+
+class PointSensor(PanelBinarySensor):
+    def __init__(self, point, unique_id):
+        PanelBinarySensor.__init__(self, point.attach, unique_id)
+        self._point = point
 
     @property
     def name(self): return self._point.name
@@ -50,20 +66,13 @@ class PointSensor(BinarySensorEntity):
         return self._point.is_open() or self._point.is_normal()
 
     @property
-    def unique_id(self): return self._unique_id
-
-    @property
     def device_class(self):
         return _guess_device_class(self.name.lower())
 
-    @property
-    def should_poll(self): return False
-
-class ConnectionStatusSensor(BinarySensorEntity):
+class ConnectionStatusSensor(PanelBinarySensor):
     def __init__(self, panel, unique_id):
+        PanelBinarySensor.__init__(self, panel.connection_status_attach, unique_id)
         self._panel = panel
-        self._unique_id = unique_id
-        panel.connection_status_attach(self.async_schedule_update_ha_state)
 
     @property
     def name(self): return f"{self._panel.model} Connection Status"
@@ -72,13 +81,7 @@ class ConnectionStatusSensor(BinarySensorEntity):
     def is_on(self): return self._panel.connection_status()
 
     @property
-    def unique_id(self): return self._unique_id
-
-    @property
     def device_class(self): return BinarySensorDeviceClass.CONNECTIVITY
-
-    @property
-    def should_poll(self): return False
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
