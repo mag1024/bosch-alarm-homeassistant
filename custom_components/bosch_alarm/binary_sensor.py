@@ -1,4 +1,4 @@
-""" Support for Bosch alarm panel Points (sensors) """
+""" Support for Bosch Alarm Panel points as binary sensors """
 
 from __future__ import annotations
 
@@ -9,10 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-
-from homeassistant.helpers import entity_platform
-
-import bosch_alarm_mode2
 
 from .const import (
     DOMAIN,
@@ -34,8 +30,8 @@ def _guess_device_class(name):
     return None
 
 class PanelBinarySensor(BinarySensorEntity):
-    def __init__(self, attach, unique_id):
-        self._attach = attach
+    def __init__(self, observer, unique_id):
+        self._observer = observer
         self._unique_id = unique_id
 
     @property
@@ -45,14 +41,14 @@ class PanelBinarySensor(BinarySensorEntity):
     def should_poll(self): return False
 
     async def async_added_to_hass(self):
-        self._attach(self.async_schedule_update_ha_state)
+        self._observer.attach(self.async_schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self):
-        self._attach(None)
+        self._observer.detach(self.async_schedule_update_ha_state)
 
 class PointSensor(PanelBinarySensor):
     def __init__(self, point, unique_id):
-        PanelBinarySensor.__init__(self, point.attach, unique_id)
+        PanelBinarySensor.__init__(self, point.status_observer, unique_id)
         self._point = point
 
     @property
@@ -71,7 +67,7 @@ class PointSensor(PanelBinarySensor):
 
 class ConnectionStatusSensor(PanelBinarySensor):
     def __init__(self, panel, unique_id):
-        PanelBinarySensor.__init__(self, panel.connection_status_attach, unique_id)
+        PanelBinarySensor.__init__(self, panel.connection_status_observer, unique_id)
         self._panel = panel
 
     @property
@@ -85,7 +81,7 @@ class ConnectionStatusSensor(PanelBinarySensor):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the UPB light based on a config entry."""
+    """Set up binary sensors for alarm points and the connection status."""
 
     panel = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
