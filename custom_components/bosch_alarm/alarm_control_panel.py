@@ -17,8 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 READY_STATE_ATTR = 'ready_to_arm'
 READY_STATE_NO = 'no'
-READY_STATE_PART = 'part'
-READY_STATE_ALL = 'all'
+READY_STATE_HOME = 'home'
+READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
@@ -63,8 +63,8 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self):
         ready_state = READY_STATE_NO
-        if self._area.all_ready: ready_state = READY_STATE_ALL
-        elif self._area.part_ready: ready_state = READY_STATE_PART
+        if self._area.all_ready: ready_state = READY_STATE_AWAY
+        elif self._area.part_ready: ready_state = READY_STATE_HOME
         return { READY_STATE_ATTR: ready_state,
                  FAULTED_POINTS_ATTR: self._area.faults }
 
