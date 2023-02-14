@@ -39,7 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel
 
-    setup = lambda: hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    setup = lambda: hass.async_create_task(
+            hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     if panel.connection_status():
         setup()
     else:
