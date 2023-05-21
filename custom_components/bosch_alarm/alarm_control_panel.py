@@ -39,6 +39,7 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
 
     @property
     def state(self):
+        if self._area.is_triggered(): return 'triggered'
         if self._area.is_disarmed(): return 'disarmed'
         if self._area.is_arming(): return 'arming'
         if self._area.is_pending(): return 'pending'
@@ -70,10 +71,12 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
 
     async def async_added_to_hass(self):
         self._area.status_observer.attach(self.async_schedule_update_ha_state)
+        self._area.alarm_observer.attach(self.async_schedule_update_ha_state)
         self._area.ready_observer.attach(self.async_schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self):
         self._area.status_observer.detach(self.async_schedule_update_ha_state)
+        self._area.alarm_observer.detach(self.async_schedule_update_ha_state)
         self._area.ready_observer.detach(self.async_schedule_update_ha_state)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
