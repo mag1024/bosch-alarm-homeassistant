@@ -4,13 +4,14 @@
   "version": "0.1.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
-  "requirements": ["bosch-alarm-mode2 @ git+https://github.com/mag1024/bosch-alarm-mode2.git"],
+  "requirements": ["bosch-alarm-mode2 @ git+https://github.com/sanjay900/bosch-alarm-mode2.git"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
   "codeowners": [
-    "@mag1024"
+    "@mag1024",
+    "@sanjay900"
   ],
   "iot_class": "local_push"
 }

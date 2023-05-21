@@ -40,7 +40,7 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     panel = Panel(host=data[CONF_HOST], port=data[CONF_PORT],
-                  passcode=data[CONF_PASSWORD])
+                  passcode=data[CONF_PASSWORD],legacymode=False)
     try:
         await panel.connect(Panel.LOAD_BASIC_INFO)
     finally:
