@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
-            passcode=entry.data[CONF_PASSWORD])
+            passcode=entry.data[CONF_PASSWORD],legacymode=False)
     try:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
