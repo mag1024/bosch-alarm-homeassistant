@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
-  "requirements": ["bosch-alarm-mode2 @ git+https://github.com/sanjay900/bosch-alarm-mode2.git@0.2.0#593ce06"],
+  "requirements": ["bosch-alarm-mode2 @ git+https://github.com/sanjay900/bosch-alarm-mode2.git"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
