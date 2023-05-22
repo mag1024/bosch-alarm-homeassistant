@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if panel.connection_status():
         setup()
     else:
-        panel.connection_status_attach(
+        panel.connection_status_observer.attach(
                 lambda: panel.connection_status() and setup())
 
     return True
