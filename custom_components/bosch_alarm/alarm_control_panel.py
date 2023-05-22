@@ -20,6 +20,7 @@ READY_STATE_NO = 'no'
 READY_STATE_HOME = 'home'
 READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
+ALARMS_ATTR = 'alarms'
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
     def __init__(self, panel, area_id, area, unique_id):
@@ -67,7 +68,8 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         if self._area.all_ready: ready_state = READY_STATE_AWAY
         elif self._area.part_ready: ready_state = READY_STATE_HOME
         return { READY_STATE_ATTR: ready_state,
-                 FAULTED_POINTS_ATTR: self._area.faults }
+                 FAULTED_POINTS_ATTR: self._area.faults,
+                 ALARMS_ATTR: "\n".join(self._area.formatted_alarms()) }
 
     async def async_added_to_hass(self):
         self._area.status_observer.attach(self.async_schedule_update_ha_state)
