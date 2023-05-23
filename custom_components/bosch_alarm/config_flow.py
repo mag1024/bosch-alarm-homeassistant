@@ -110,21 +110,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_REQUIRE_ARMING_CODE,
-                        default=self.config_entry.options.get(CONF_REQUIRE_ARMING_CODE),
+                        default=self.config_entry.options.get(CONF_REQUIRE_ARMING_CODE) or False,
                     ): bool,
 
                     vol.Required(
                         CONF_ARMING_CODE,
-                        default=self.config_entry.options.get(CONF_ARMING_CODE),
+                        default=self.config_entry.options.get(CONF_ARMING_CODE) or 0,
                     ): int,
 
                     vol.Required(
                         CONF_HISTORY,
-                        default=self.config_entry.options.get(CONF_HISTORY),
+                        default=self.config_entry.options.get(CONF_HISTORY) or False,
                     ): bool,
                     vol.Required(
                         CONF_HISTORY_COUNT,
-                        default=self.config_entry.options.get(CONF_HISTORY_COUNT),
+                        default=self.config_entry.options.get(CONF_HISTORY_COUNT) or 0,
                     ): int
                 }
             ),
