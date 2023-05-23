@@ -23,6 +23,10 @@ from bosch_alarm_mode2 import Panel
 
 from .const import (
     DOMAIN,
+    CONF_ARMING_CODE,
+    CONF_REQUIRE_ARMING_CODE,
+    CONF_HISTORY,
+    CONF_HISTORY_COUNT
 )
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +58,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
     VERSION = 1
+    entry: config_entries.ConfigEntry | None = None
 
+    @staticmethod
+    @config_entries.callback
+    def async_get_options_flow(config_entry):
+        return OptionsFlowHandler(config_entry)
+    
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -81,4 +91,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_REQUIRE_ARMING_CODE,
+                        default=self.config_entry.options.get(CONF_REQUIRE_ARMING_CODE),
+                    ): bool,
+
+                    vol.Required(
+                        CONF_ARMING_CODE,
+                        default=self.config_entry.options.get(CONF_ARMING_CODE),
+                    ): int,
+
+                    vol.Required(
+                        CONF_HISTORY,
+                        default=self.config_entry.options.get(CONF_HISTORY),
+                    ): bool,
+                    vol.Required(
+                        CONF_HISTORY_COUNT,
+                        default=self.config_entry.options.get(CONF_HISTORY_COUNT),
+                    ): int
+                }
+            ),
         )

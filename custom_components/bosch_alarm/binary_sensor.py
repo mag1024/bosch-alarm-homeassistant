@@ -25,6 +25,8 @@ def _guess_device_class(name):
         return BinarySensorDeviceClass.MOTION
     if re.search(r'\bco\b', name):
         return BinarySensorDeviceClass.CO
+    if re.search(r'\bsmoke\b', name):
+        return BinarySensorDeviceClass.SMOKE
     if re.search(r'\bglassbr(ea)?k\b', name):
         return BinarySensorDeviceClass.TAMPER
     return None
