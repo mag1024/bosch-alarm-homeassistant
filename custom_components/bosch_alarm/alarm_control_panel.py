@@ -63,11 +63,11 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         )
 
     async def async_alarm_disarm(self, code) -> None:
-        await self._panel.area_disarm(self._area_id, code)
+        await self._panel.area_disarm(self._area_id, int(code))
     async def async_alarm_arm_home(self, code) -> None:
-        await self._panel.area_arm_part(self._area_id, code)
+        await self._panel.area_arm_part(self._area_id, int(code))
     async def async_alarm_arm_away(self, code) -> None:
-        await self._panel.area_arm_all(self._area_id, code)
+        await self._panel.area_arm_all(self._area_id, int(code))
 
     @property
     def extra_state_attributes(self):
