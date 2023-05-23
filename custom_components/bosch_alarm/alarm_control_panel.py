@@ -8,6 +8,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
+import homeassistant.components.alarm_control_panel as alarm
 
 from .const import (
     DOMAIN,
@@ -28,7 +29,13 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         self._area_id = area_id
         self._area = area
         self._unique_id = unique_id
-
+    
+    @property
+    def code_format(self) -> alarm.CodeFormat | None:
+        """Return one or more digits/characters."""
+        if self._panel.has_arming_code(): 
+            return alarm.CodeFormat.NUMBER
+        return None
     @property
     def unique_id(self): return self._unique_id
 
@@ -55,12 +62,12 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
             | AlarmControlPanelEntityFeature.ARM_AWAY
         )
 
-    async def async_alarm_disarm(self, code=None) -> None:
-        await self._panel.area_disarm(self._area_id)
-    async def async_alarm_arm_home(self, code=None) -> None:
-        await self._panel.area_arm_part(self._area_id)
-    async def async_alarm_arm_away(self, code=None) -> None:
-        await self._panel.area_arm_all(self._area_id)
+    async def async_alarm_disarm(self, code) -> None:
+        await self._panel.area_disarm(self._area_id, code)
+    async def async_alarm_arm_home(self, code) -> None:
+        await self._panel.area_arm_part(self._area_id, code)
+    async def async_alarm_arm_away(self, code) -> None:
+        await self._panel.area_arm_all(self._area_id, code)
 
     @property
     def extra_state_attributes(self):
