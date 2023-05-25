@@ -11,6 +11,8 @@ from homeassistant.components.alarm_control_panel import (
 import homeassistant.components.alarm_control_panel as alarm
 
 from .const import (
+    CONF_ARMING_CODE,
+    CONF_REQUIRE_ARMING_CODE,
     DOMAIN,
 )
 
@@ -21,19 +23,21 @@ READY_STATE_NO = 'no'
 READY_STATE_HOME = 'home'
 READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
+HISTORY_ATTR = 'history'
 ALARMS_ATTR = 'alarms'
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
-    def __init__(self, panel, area_id, area, unique_id):
+    def __init__(self, panel, arming_code, area_id, area, unique_id):
         self._panel = panel
         self._area_id = area_id
         self._area = area
         self._unique_id = unique_id
+        self._arming_code = arming_code
     
     @property
     def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
-        if self._panel.has_arming_code(): 
+        if self._arming_code != None: 
             return alarm.CodeFormat.NUMBER
         return None
     @property
@@ -61,13 +65,19 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
             AlarmControlPanelEntityFeature.ARM_HOME
             | AlarmControlPanelEntityFeature.ARM_AWAY
         )
+    
+    def _arming_code_correct(self, code) -> bool:
+        return not self._arming_code or int(code) == self._arming_code
 
     async def async_alarm_disarm(self, code=0) -> None:
-        await self._panel.area_disarm(self._area_id, int(code))
+        if self._arming_code_correct(code): 
+            await self._panel.area_disarm(self._area_id)
     async def async_alarm_arm_home(self, code=0) -> None:
-        await self._panel.area_arm_part(self._area_id, int(code))
+        if self._arming_code_correct(code): 
+            await self._panel.area_arm_part(self._area_id)
     async def async_alarm_arm_away(self, code=0) -> None:
-        await self._panel.area_arm_all(self._area_id, int(code))
+        if self._arming_code_correct(code): 
+            await self._panel.area_arm_all(self._area_id)
 
     @property
     def extra_state_attributes(self):
@@ -76,6 +86,7 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         elif self._area.part_ready: ready_state = READY_STATE_HOME
         return { READY_STATE_ATTR: ready_state,
                  FAULTED_POINTS_ATTR: self._area.faults,
+                 HISTORY_ATTR: "\n".join(self._area.history),
                  ALARMS_ATTR: "\n".join(self._area.alarms) }
 
     async def async_added_to_hass(self):
@@ -92,7 +103,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
 
     panel = hass.data[DOMAIN][config_entry.entry_id]
+
+    arming_code = None
+    if CONF_REQUIRE_ARMING_CODE in config_entry.options and config_entry.options[CONF_REQUIRE_ARMING_CODE] and CONF_ARMING_CODE in config_entry.options:
+        arming_code = config_entry.options[CONF_ARMING_CODE] 
     async_add_entities(
-            AreaAlarmControlPanel(panel, id, area, f'{panel.serial_number}_area_{id}')
+            AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
                 for (id, area) in panel.areas.items())
 

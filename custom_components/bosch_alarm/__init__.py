@@ -28,12 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
 
-    arming_code = None
-    if CONF_REQUIRE_ARMING_CODE in entry.options and entry.options[CONF_REQUIRE_ARMING_CODE] and CONF_ARMING_CODE in entry.options:
-        arming_code = entry.options[CONF_ARMING_CODE] 
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
-            passcode=entry.data[CONF_PASSWORD], arming_code=arming_code)
+            passcode=entry.data[CONF_PASSWORD])
     try:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
