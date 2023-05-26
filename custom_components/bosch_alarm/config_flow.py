@@ -23,7 +23,8 @@ from homeassistant.const import (
 from bosch_alarm_mode2 import Panel
 
 from .const import (
-    DOMAIN
+    DOMAIN,
+    CONF_HISTORY
 )
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +108,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_CODE,
+                        default=self.config_entry.options.get(CONF_CODE),
+                    ): int,
+
+                    vol.Optional(
+                        CONF_HISTORY,
                         default=self.config_entry.options.get(CONF_CODE),
                     ): int
                 }

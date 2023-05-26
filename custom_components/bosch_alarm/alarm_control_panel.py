@@ -9,6 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
 )
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from homeassistant.const import (
     CONF_CODE
@@ -26,9 +27,10 @@ READY_STATE_HOME = 'home'
 READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
 HISTORY_ATTR = 'history'
+HISTORY_ID_ATTR = 'history_id'
 ALARMS_ATTR = 'alarms'
 
-class AreaAlarmControlPanel(AlarmControlPanelEntity):
+class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
     def __init__(self, panel, arming_code, area_id, area, unique_id):
         self._panel = panel
         self._area_id = area_id
@@ -88,12 +90,30 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         elif self._area.part_ready: ready_state = READY_STATE_HOME
         return { READY_STATE_ATTR: ready_state,
                  FAULTED_POINTS_ATTR: self._area.faults,
+                 HISTORY_ATTR: "\n".join(self._area.history),
+                 HISTORY_ID_ATTR: self._area.last_history_event,
                  ALARMS_ATTR: "\n".join(self._area.alarms) }
+    
+    async def _async_update_ha_state(self):
+        await self.async_schedule_update_ha_state()
+        await self.async_write_ha_state()
 
     async def async_added_to_hass(self):
-        self._area.status_observer.attach(self.async_schedule_update_ha_state)
-        self._area.alarm_observer.attach(self.async_schedule_update_ha_state)
-        self._area.ready_observer.attach(self.async_schedule_update_ha_state)
+        self._area.status_observer.attach(self._async_update_ha_state)
+        self._area.alarm_observer.attach(self._async_update_ha_state)
+        self._area.ready_observer.attach(self._async_update_ha_state)
+        self._area.history_observer.attach(self._async_update_ha_state)
+        state = await self.async_get_last_state()
+        history = []
+        start_id = 0
+        if state:
+           state = state.as_dict()
+           start_id = state[HISTORY_ID_ATTR]
+           history = state[HISTORY_ATTR].split("\n")
+        await self._panel.load_history(start_id, history)
+        
+           
+
 
     async def async_will_remove_from_hass(self):
         self._area.status_observer.detach(self.async_schedule_update_ha_state)
