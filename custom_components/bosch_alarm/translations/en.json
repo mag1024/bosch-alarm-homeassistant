@@ -25,10 +25,7 @@
         "step": {
             "init": {
                 "data": {
-                    "require_arming_code": "Require Arming Code",
-                    "arming_code": "Arming Code",
-                    "show_history": "Pull the history from the panel",
-                    "history_count": "How many records should we pull from the history? Use 0 to pull all records"
+                    "arming_code": "Arming Code"
                 }
             }
         }
