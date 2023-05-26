@@ -116,9 +116,10 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
 
 
     async def async_will_remove_from_hass(self):
-        self._area.status_observer.detach(self.async_schedule_update_ha_state)
-        self._area.alarm_observer.detach(self.async_schedule_update_ha_state)
-        self._area.ready_observer.detach(self.async_schedule_update_ha_state)
+        self._area.status_observer.detach(self._async_update_ha_state)
+        self._area.alarm_observer.detach(self._async_update_ha_state)
+        self._area.ready_observer.detach(self._async_update_ha_state)
+        self._area.history_observer.detach(self._async_update_ha_state)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
