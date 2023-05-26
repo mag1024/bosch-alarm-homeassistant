@@ -106,7 +106,7 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         state = await self.async_get_last_state()
         history = []
         start_id = 0
-        if state:
+        if state and HISTORY_ID_ATTR in state:
            state = state.as_dict()
            start_id = state[HISTORY_ID_ATTR]
            history = state[HISTORY_ATTR].split("\n")
