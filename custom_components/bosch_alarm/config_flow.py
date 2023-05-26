@@ -17,16 +17,13 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_PASSWORD,
+    CONF_CODE
 )
 
 from bosch_alarm_mode2 import Panel
 
 from .const import (
-    DOMAIN,
-    CONF_ARMING_CODE,
-    CONF_REQUIRE_ARMING_CODE,
-    CONF_HISTORY,
-    CONF_HISTORY_COUNT
+    DOMAIN
 )
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,23 +105,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_REQUIRE_ARMING_CODE,
-                        default=self.config_entry.options.get(CONF_REQUIRE_ARMING_CODE) or False,
-                    ): bool,
-
-                    vol.Required(
-                        CONF_ARMING_CODE,
-                        default=self.config_entry.options.get(CONF_ARMING_CODE) or 0,
-                    ): int,
-
-                    vol.Required(
-                        CONF_HISTORY,
-                        default=self.config_entry.options.get(CONF_HISTORY) or False,
-                    ): bool,
-                    vol.Required(
-                        CONF_HISTORY_COUNT,
-                        default=self.config_entry.options.get(CONF_HISTORY_COUNT) or 0,
+                    vol.Optional(
+                        CONF_CODE,
+                        default=self.config_entry.options.get(CONF_CODE),
                     ): int
                 }
             ),

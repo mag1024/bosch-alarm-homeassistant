@@ -10,9 +10,11 @@ from homeassistant.components.alarm_control_panel import (
 )
 import homeassistant.components.alarm_control_panel as alarm
 
+from homeassistant.const import (
+    CONF_CODE
+)
+
 from .const import (
-    CONF_ARMING_CODE,
-    CONF_REQUIRE_ARMING_CODE,
     DOMAIN,
 )
 
@@ -86,7 +88,6 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         elif self._area.part_ready: ready_state = READY_STATE_HOME
         return { READY_STATE_ATTR: ready_state,
                  FAULTED_POINTS_ATTR: self._area.faults,
-                 HISTORY_ATTR: "\n".join(self._area.history),
                  ALARMS_ATTR: "\n".join(self._area.alarms) }
 
     async def async_added_to_hass(self):
@@ -105,8 +106,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     panel = hass.data[DOMAIN][config_entry.entry_id]
 
     arming_code = None
-    if CONF_REQUIRE_ARMING_CODE in config_entry.options and config_entry.options[CONF_REQUIRE_ARMING_CODE] and CONF_ARMING_CODE in config_entry.options:
-        arming_code = config_entry.options[CONF_ARMING_CODE] 
+    if CONF_CODE in config_entry.options:
+        arming_code = config_entry.options[CONF_CODE] 
     async_add_entities(
             AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
                 for (id, area) in panel.areas.items())
