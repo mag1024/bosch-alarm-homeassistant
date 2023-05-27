@@ -25,7 +25,6 @@ READY_STATE_NO = 'no'
 READY_STATE_HOME = 'home'
 READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
-HISTORY_ATTR = 'history'
 ALARMS_ATTR = 'alarms'
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
@@ -105,9 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     panel = hass.data[DOMAIN][config_entry.entry_id]
 
-    arming_code = None
-    if CONF_CODE in config_entry.options:
-        arming_code = config_entry.options[CONF_CODE] 
+    arming_code = config_entry.options.get(CONF_CODE, None)
     async_add_entities(
             AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
                 for (id, area) in panel.areas.items())
