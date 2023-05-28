@@ -36,6 +36,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_INIT_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_CODE
+        ): str
+    }
+)
+
+
 async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect.
 
@@ -62,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @config_entries.callback
     def async_get_options_flow(config_entry):
         return OptionsFlowHandler(config_entry)
-    
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -90,6 +99,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
 class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
@@ -101,15 +112,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-        
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_CODE,
-                        default=self.config_entry.options.get(CONF_CODE, ""),
-                    ): str
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_INIT_DATA_SCHEMA, self.config_entry.options
+            )
         )
