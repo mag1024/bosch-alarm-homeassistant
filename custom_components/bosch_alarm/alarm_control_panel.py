@@ -38,9 +38,11 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
     @property
     def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
-        if self._arming_code != None: 
+        if self._arming_code is None: 
+            return None
+        if self._arming_code.isnumeric():
             return alarm.CodeFormat.NUMBER
-        return None
+        return alarm.CodeFormat.TEXT
     @property
     def unique_id(self): return self._unique_id
 
@@ -68,7 +70,13 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         )
     
     def _arming_code_correct(self, code) -> bool:
-        return not self._arming_code or int(code) == self._arming_code
+        if self.code_format == alarm.CodeFormat.NUMBER:
+            return int(code) == self._arming_code
+
+        if self.code_format == alarm.CodeFormat.TEXT:
+            return code == self._arming_code
+
+        return True
 
     async def async_alarm_disarm(self, code=0) -> None:
         if self._arming_code_correct(code): 

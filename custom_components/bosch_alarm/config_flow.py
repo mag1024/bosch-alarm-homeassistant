@@ -100,7 +100,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            print(user_input)
             return self.async_create_entry(title="", data=user_input)
         
         return self.async_show_form(
@@ -109,8 +108,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_CODE,
-                        default=self.config_entry.options.get(CONF_CODE, vol.UNDEFINED),
-                    ): cv.positive_int
+                        default=self.config_entry.options.get(CONF_CODE, ""),
+                    ): str
                 }
             ),
         )
