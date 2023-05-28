@@ -44,7 +44,6 @@ STEP_INIT_DATA_SCHEMA = vol.Schema(
     }
 )
 
-
 async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect.
 
@@ -99,7 +98,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
