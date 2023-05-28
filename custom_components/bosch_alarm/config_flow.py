@@ -107,7 +107,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_CODE,
-                        default=self.config_entry.options.get(CONF_CODE),
+                        default=self.config_entry.options.get(CONF_CODE, vol.UNDEFINED),
                     ): int
                 }
             ),
