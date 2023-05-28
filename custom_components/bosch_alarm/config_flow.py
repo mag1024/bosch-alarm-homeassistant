@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
     CONF_HOST,
@@ -30,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT): int,
+        vol.Required(CONF_PORT): cv.positive_int,
         vol.Required(CONF_PASSWORD): str,
     }
 )
@@ -99,8 +100,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
+            print(user_input)
             return self.async_create_entry(title="", data=user_input)
-
+        
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
@@ -108,7 +110,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_CODE,
                         default=self.config_entry.options.get(CONF_CODE, vol.UNDEFINED),
-                    ): int
+                    ): cv.positive_int
                 }
             ),
         )
