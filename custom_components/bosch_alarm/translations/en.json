@@ -17,5 +17,17 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "arming_code": "Arming Code"
+                }
+            }
+        }
     }
 }

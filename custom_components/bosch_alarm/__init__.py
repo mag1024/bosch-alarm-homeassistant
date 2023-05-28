@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    CONF_PASSWORD,
+    CONF_PASSWORD
 )
 
 import asyncio
@@ -17,7 +17,7 @@ import logging
 import bosch_alarm_mode2
 
 from .const import (
-    DOMAIN,
+    DOMAIN
 )
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL]
@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
-
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             passcode=entry.data[CONF_PASSWORD])
@@ -44,11 +43,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if panel.connection_status():
         setup()
     else:
-        panel.connection_status_attach(
+        panel.connection_status_observer.attach(
                 lambda: panel.connection_status() and setup())
 
+    entry.async_on_unload(entry.add_update_listener(options_update_listener))
     return True
 
+async def options_update_listener(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
