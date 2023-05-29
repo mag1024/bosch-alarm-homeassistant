@@ -25,7 +25,7 @@
         "step": {
             "init": {
                 "data": {
-                    "arming_code": "Arming Code"
+                    "code": "Arming Code"
                 }
             }
         }

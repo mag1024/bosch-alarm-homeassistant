@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
     CONF_HOST,
@@ -30,8 +31,16 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT): int,
+        vol.Required(CONF_PORT): cv.positive_int,
         vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+STEP_INIT_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_CODE
+        ): str
     }
 )
 
@@ -61,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @config_entries.callback
     def async_get_options_flow(config_entry):
         return OptionsFlowHandler(config_entry)
-    
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -89,6 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
 class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
@@ -103,12 +113,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_CODE,
-                        default=self.config_entry.options.get(CONF_CODE),
-                    ): int
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_INIT_DATA_SCHEMA, self.config_entry.options
+            )
         )
