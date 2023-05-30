@@ -53,7 +53,7 @@ class PanelHistorySensor(SensorEntity, RestoreEntity):
             if HISTORY_ID_ATTR in state:
                 start_id = state[HISTORY_ID_ATTR]
                 history = state[HISTORY_ATTR].split("\n")
-        await self._panel.load_history(start_id, history)
+        await self._panel.init_history(start_id, history)
 
     async def async_will_remove_from_hass(self):
         self._observer.detach(self.async_schedule_update_ha_state)
