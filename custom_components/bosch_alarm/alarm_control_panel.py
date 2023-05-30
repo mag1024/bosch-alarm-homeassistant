@@ -9,7 +9,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
 )
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from homeassistant.const import (
     CONF_CODE
@@ -28,7 +27,7 @@ READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
 ALARMS_ATTR = 'alarms'
 
-class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
+class AreaAlarmControlPanel(AlarmControlPanelEntity):
     def __init__(self, panel, arming_code, area_id, area, unique_id):
         self._panel = panel
         self._area_id = area_id

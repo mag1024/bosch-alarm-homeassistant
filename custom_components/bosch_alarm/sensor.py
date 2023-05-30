@@ -7,6 +7,7 @@ import logging
 from homeassistant.components.sensor import (
     SensorEntity
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     DOMAIN,
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 HISTORY_ATTR = 'history'
 HISTORY_ID_ATTR = 'history_id'
 
-class PanelHistorySensor(SensorEntity):
+class PanelHistorySensor(SensorEntity, RestoreEntity):
     def __init__(self, panel, unique_id):
         self._panel = panel
         self._observer = panel.history_observer
