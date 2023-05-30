@@ -30,6 +30,9 @@ class PanelHistorySensor(SensorEntity):
     def should_poll(self): return False
 
     @property
+    def name(self): return f"{self._panel.model} History"
+
+    @property
     def extra_state_attributes(self):
         return { HISTORY_ID_ATTR: self._panel.last_history_id }
     
