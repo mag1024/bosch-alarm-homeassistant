@@ -34,6 +34,9 @@ class PanelHistorySensor(SensorEntity, RestoreEntity):
     def should_poll(self): return False
 
     @property
+    def state(self): return len(self._panel.history)
+
+    @property
     def name(self): return f"{self._panel.model} History"
 
     @property
