@@ -26,8 +26,6 @@ READY_STATE_NO = 'no'
 READY_STATE_HOME = 'home'
 READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
-HISTORY_ATTR = 'history'
-HISTORY_ID_ATTR = 'history_id'
 ALARMS_ATTR = 'alarms'
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
@@ -98,8 +96,6 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         elif self._area.part_ready: ready_state = READY_STATE_HOME
         return { READY_STATE_ATTR: ready_state,
                  FAULTED_POINTS_ATTR: self._area.faults,
-                 HISTORY_ATTR: "\n".join(self._area.history),
-                 HISTORY_ID_ATTR: self._area.last_history_event,
                  ALARMS_ATTR: "\n".join(self._area.alarms) }
     
     async def _async_update_ha_state(self):
@@ -110,16 +106,6 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._area.status_observer.attach(self._async_update_ha_state)
         self._area.alarm_observer.attach(self._async_update_ha_state)
         self._area.ready_observer.attach(self._async_update_ha_state)
-        self._area.history_observer.attach(self._async_update_ha_state)
-        state = await self.async_get_last_state()
-        history = []
-        start_id = 0
-        if state:
-            state = state.as_dict()
-            if HISTORY_ID_ATTR in state:
-                start_id = state[HISTORY_ID_ATTR]
-                history = state[HISTORY_ATTR].split("\n")
-        await self._panel.load_history(start_id, history)
         
            
 
@@ -128,7 +114,6 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._area.status_observer.detach(self._async_update_ha_state)
         self._area.alarm_observer.detach(self._async_update_ha_state)
         self._area.ready_observer.detach(self._async_update_ha_state)
-        self._area.history_observer.detach(self._async_update_ha_state)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
