@@ -35,12 +35,8 @@ class PanelHistorySensor(SensorEntity, RestoreEntity):
 
     @property
     def extra_state_attributes(self):
-        return { HISTORY_ID_ATTR: self._panel.last_history_id }
+        return { HISTORY_ATTR: "\n".join(self._panel.history), HISTORY_ID_ATTR: self._panel.last_history_id }
     
-    @property
-    def state(self):
-        return "\n".join(self._panel.history)
-
     async def async_added_to_hass(self):
         self._observer.attach(self.async_schedule_update_ha_state)
         state = await self.async_get_last_state()
