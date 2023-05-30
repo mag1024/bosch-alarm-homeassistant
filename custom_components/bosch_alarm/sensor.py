@@ -25,6 +25,9 @@ class PanelHistorySensor(SensorEntity, RestoreEntity):
         self._unique_id = unique_id
 
     @property
+    def icon(self): return "mdi:history"
+
+    @property
     def unique_id(self): return self._unique_id
 
     @property
