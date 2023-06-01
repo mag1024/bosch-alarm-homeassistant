@@ -10,13 +10,10 @@ from homeassistant.components.alarm_control_panel import (
 )
 import homeassistant.components.alarm_control_panel as alarm
 
-from homeassistant.const import (
-    CONF_CODE
-)
+from homeassistant.const import CONF_CODE
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN
+from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +31,7 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         self._area = area
         self._unique_id = unique_id
         self._arming_code = arming_code
+        self._attr_device_info = device_info_from_panel(panel)
     
     @property
     def code_format(self) -> alarm.CodeFormat | None:
