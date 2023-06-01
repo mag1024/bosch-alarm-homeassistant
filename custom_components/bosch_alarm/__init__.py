@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,13 +15,9 @@ from homeassistant.const import (
     CONF_PASSWORD
 )
 
-import asyncio
-import logging
 import bosch_alarm_mode2
 
-from .const import (
-    DOMAIN
-)
+from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL]
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel
 
-    setup = lambda: hass.async_create_task(
+    def setup():
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     if panel.connection_status():
         setup()
