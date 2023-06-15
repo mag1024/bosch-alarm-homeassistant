@@ -96,18 +96,15 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
                  FAULTED_POINTS_ATTR: self._area.faults,
                  ALARMS_ATTR: "\n".join(self._area.alarms) }
     
-    def _schedule_update_ha_state(self):
-        asyncio.create_task(self.async_schedule_update_ha_state())
-
     async def async_added_to_hass(self):
-        self._area.status_observer.attach(self._schedule_update_ha_state)
-        self._area.alarm_observer.attach(self._schedule_update_ha_state)
-        self._area.ready_observer.attach(self._schedule_update_ha_state)
+        self._area.status_observer.attach(self.schedule_update_ha_state)
+        self._area.alarm_observer.attach(self.schedule_update_ha_state)
+        self._area.ready_observer.attach(self.schedule_update_ha_state)
         
     async def async_will_remove_from_hass(self):
-        self._area.status_observer.detach(self._schedule_update_ha_state)
-        self._area.alarm_observer.detach(self._schedule_update_ha_state)
-        self._area.ready_observer.detach(self._schedule_update_ha_state)
+        self._area.status_observer.detach(self.schedule_update_ha_state)
+        self._area.alarm_observer.detach(self.schedule_update_ha_state)
+        self._area.ready_observer.detach(self.schedule_update_ha_state)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
