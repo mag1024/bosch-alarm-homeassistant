@@ -38,12 +38,15 @@ class PanelHistorySensor(SensorEntity):
     def should_poll(self): return False
 
     @property
-    def state(self): 
-        history = self._panel.history
-        return "\n".join(x[1] for x in history)
+    def state(self): return len(self._panel.history)
 
     @property
     def name(self): return f"{self._panel.model} History"
+
+    @property
+    def extra_state_attributes(self):
+        history = self._panel.history
+        return { HISTORY_ATTR: "\n".join(x[1] for x in history)}
     
     async def async_added_to_hass(self):
         self._observer.attach(self.async_schedule_update_ha_state)
