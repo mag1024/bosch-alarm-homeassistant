@@ -1,4 +1,4 @@
-"""Helpers for HomeKit data stored in HA storage."""
+"""Helpers for History data stored in HA storage."""
 
 from __future__ import annotations
 
