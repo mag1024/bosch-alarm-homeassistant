@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         panel.connection_status_observer.attach(
                 lambda: panel.connection_status() and setup())
     
-    panel.history_observer.attach(lambda: storage.async_create_or_update_map(entry.entry_id, panel.history))
+    panel.history_observer.attach(lambda: hass.async_create_task(storage.async_create_or_update_map(entry.entry_id, panel.history)))
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
     return True
