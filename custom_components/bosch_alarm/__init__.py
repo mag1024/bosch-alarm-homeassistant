@@ -32,6 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             passcode=entry.data[CONF_PASSWORD],
             previous_history_events=storage.get_events(entry.entry_id))
+    
+    panel.history_observer.attach(lambda: storage.async_create_or_update_map(entry.entry_id, panel.history))
+    
     try:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
@@ -49,8 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         panel.connection_status_observer.attach(
                 lambda: panel.connection_status() and setup())
-    
-    panel.history_observer.attach(lambda: hass.async_create_task(storage.async_create_or_update_map(entry.entry_id, panel.history)))
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
     return True
