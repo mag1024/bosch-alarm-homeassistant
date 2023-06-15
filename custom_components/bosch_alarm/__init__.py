@@ -17,7 +17,7 @@ from homeassistant.const import (
 
 import bosch_alarm_mode2
 
-from .storage import HistoryStorage
+from .storage import HistoryStorage, async_get_entity_storage
 
 from .const import DOMAIN
 
@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             passcode=entry.data[CONF_PASSWORD])
-    storage: HistoryStorage = await HistoryStorage.async_get_entity_storage(hass)
+    storage: HistoryStorage = await async_get_entity_storage(hass)
     try:
         await panel.connect(previous_history_events=storage.get_events(entry.entry_id))
     except asyncio.exceptions.TimeoutError:
