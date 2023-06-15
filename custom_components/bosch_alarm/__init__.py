@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,13 +15,11 @@ from homeassistant.const import (
     CONF_PASSWORD
 )
 
-import asyncio
-import logging
 import bosch_alarm_mode2
 
-from .const import (
-    DOMAIN
-)
+from .storage import HistoryStorage
+
+from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -28,23 +29,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             passcode=entry.data[CONF_PASSWORD])
+    storage: HistoryStorage = await HistoryStorage.async_get_entity_storage(hass)
     try:
-        await panel.connect()
+        await panel.connect(previous_history_events=storage.get_events(entry.entry_id))
     except asyncio.exceptions.TimeoutError:
         _LOGGER.warning("Initial panel connection timed out...")
     except:
         logging.exception("Initial panel connection failed")
-
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel
 
-    setup = lambda: hass.async_create_task(
+    def setup():
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     if panel.connection_status():
         setup()
     else:
         panel.connection_status_observer.attach(
                 lambda: panel.connection_status() and setup())
+    
+    panel.history_observer.attach(lambda: storage.async_create_or_update_map(entry.entry_id, panel.history))
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
     return True

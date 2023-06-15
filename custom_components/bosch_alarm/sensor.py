@@ -7,22 +7,26 @@ import logging
 from homeassistant.components.sensor import (
     SensorEntity
 )
-from homeassistant.helpers.restore_state import RestoreEntity
+
+from homeassistant.const import EntityCategory
 
 from .const import (
     DOMAIN,
 )
+from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
 
 HISTORY_ATTR = 'history'
 HISTORY_ID_ATTR = 'history_id'
 
-class PanelHistorySensor(SensorEntity, RestoreEntity):
+class PanelHistorySensor(SensorEntity):
     def __init__(self, panel, unique_id):
         self._panel = panel
         self._observer = panel.history_observer
         self._unique_id = unique_id
+        self._attr_device_info = device_info_from_panel(panel)
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def icon(self): return "mdi:history"
@@ -41,19 +45,11 @@ class PanelHistorySensor(SensorEntity, RestoreEntity):
 
     @property
     def extra_state_attributes(self):
-        return { HISTORY_ATTR: "\n".join(self._panel.history), HISTORY_ID_ATTR: self._panel.last_history_id }
+        history = self._panel.history
+        return { HISTORY_ATTR: "\n".join(x[1] for x in history)}
     
     async def async_added_to_hass(self):
         self._observer.attach(self.async_schedule_update_ha_state)
-        state = await self.async_get_last_state()
-        history = []
-        start_id = 0
-        if state:
-            state = state.as_dict()
-            if HISTORY_ID_ATTR in state:
-                start_id = state[HISTORY_ID_ATTR]
-                history = state[HISTORY_ATTR].split("\n")
-        await self._panel.init_history(start_id, history)
 
     async def async_will_remove_from_hass(self):
         self._observer.detach(self.async_schedule_update_ha_state)
