@@ -1,6 +1,7 @@
 """ Support for Bosch Alarm Panel points as binary sensors """
 
 from __future__ import annotations
+import asyncio
 
 import logging
 import re
@@ -42,11 +43,14 @@ class PanelBinarySensor(BinarySensorEntity):
     @property
     def should_poll(self): return False
 
+    def _schedule_update_ha_state(self):
+        asyncio.create_task(self.async_schedule_update_ha_state())
+
     async def async_added_to_hass(self):
-        self._observer.attach(self.async_schedule_update_ha_state)
+        self._observer.attach(self._schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self):
-        self._observer.detach(self.async_schedule_update_ha_state)
+        self._observer.detach(self._schedule_update_ha_state)
 
 class PointSensor(PanelBinarySensor):
     def __init__(self, point, unique_id, device_info):
