@@ -44,9 +44,9 @@ class HistoryStorage:
 
         self.storage_data = raw_storage.get("history", {})
 
-    def get_events(self, entry_id: str) -> list[HistoryEvent] | None:
+    def get_events(self, entry_id: str) -> list[HistoryEvent]:
         """Get history data."""
-        return self.storage_data.get(entry_id)
+        return self.storage_data.get(entry_id) or []
 
     @callback
     def async_create_or_update_map(
