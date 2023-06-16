@@ -10,16 +10,12 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, HISTORY
 
+from bosch_alarm_mode2.history import HistoryEvent
+
 HISTORY_STORAGE_KEY = HISTORY
 HISTORY_STORAGE_VERSION = 1
 HISTORY_SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
-
-
-class HistoryEvent(NamedTuple):
-    event_id: int
-    event: str
-
 
 class StorageLayout(TypedDict):
 
