@@ -17,8 +17,6 @@ from homeassistant.const import (
 
 import bosch_alarm_mode2
 
-from .storage import HistoryStorage, async_get_entity_storage
-
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR]
@@ -26,15 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
-    storage: HistoryStorage = await async_get_entity_storage(hass)
-
+    
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
-            passcode=entry.data[CONF_PASSWORD],
-            previous_history_events=storage.get_events(entry.entry_id))
-    
-    panel.history_observer.attach(lambda: storage.async_create_or_update_map(entry.entry_id, panel.history))
-    
+            passcode=entry.data[CONF_PASSWORD])
+       
     try:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
