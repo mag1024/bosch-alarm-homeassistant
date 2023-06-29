@@ -1,7 +1,6 @@
 """ Support for Bosch Alarm Panel """
 
 from __future__ import annotations
-import asyncio
 
 import logging
 
@@ -95,12 +94,12 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         return { READY_STATE_ATTR: ready_state,
                  FAULTED_POINTS_ATTR: self._area.faults,
                  ALARMS_ATTR: "\n".join(self._area.alarms) }
-    
+
     async def async_added_to_hass(self):
         self._area.status_observer.attach(self.schedule_update_ha_state)
         self._area.alarm_observer.attach(self.schedule_update_ha_state)
         self._area.ready_observer.attach(self.schedule_update_ha_state)
-        
+
     async def async_will_remove_from_hass(self):
         self._area.status_observer.detach(self.schedule_update_ha_state)
         self._area.alarm_observer.detach(self.schedule_update_ha_state)
