@@ -4,21 +4,15 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import (
-    SensorEntity
-)
+from homeassistant.components.sensor import SensorEntity
 
 from homeassistant.const import EntityCategory
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN, HISTORY_ATTR
+
 from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
-
-HISTORY_ATTR = 'history'
-HISTORY_ID_ATTR = 'history_id'
 
 class PanelHistorySensor(SensorEntity):
     def __init__(self, panel, unique_id):
@@ -45,8 +39,8 @@ class PanelHistorySensor(SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        history = self._panel.history
-        return { HISTORY_ATTR: "\n".join(history)}
+        events = self._panel.events
+        return { HISTORY_ATTR: "\n".join(events)}
     
     async def async_added_to_hass(self):
         self._observer.attach(self.schedule_update_ha_state)
