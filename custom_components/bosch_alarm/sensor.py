@@ -15,10 +15,10 @@ from .device import device_info_from_panel
 _LOGGER = logging.getLogger(__name__)
 
 class PanelHistorySensor(SensorEntity):
-    def __init__(self, panel, unique_id):
+    def __init__(self, panel):
         self._panel = panel
         self._observer = panel.history_observer
-        self._unique_id = unique_id
+        self._unique_id = f'{panel.serial_number}_history'
         self._attr_device_info = device_info_from_panel(panel)
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -52,7 +52,5 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for tracking panel history."""
 
     panel = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-            [PanelHistorySensor(
-                panel, f'{panel.serial_number}_history')])
+    async_add_entities([PanelHistorySensor(panel)])
 
