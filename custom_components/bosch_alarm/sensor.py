@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 class PanelHistorySensor(SensorEntity):
     def __init__(self, panel):
         self._panel = panel
-        self._observer = panel.history_observer
-        self._unique_id = f'{panel.serial_number}_history'
         self._attr_device_info = device_info_from_panel(panel)
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -26,7 +24,7 @@ class PanelHistorySensor(SensorEntity):
     def icon(self): return "mdi:history"
 
     @property
-    def unique_id(self): return self._unique_id
+    def unique_id(self): return f'{self._panel.serial_number}_history'
 
     @property
     def should_poll(self): return False
@@ -43,10 +41,10 @@ class PanelHistorySensor(SensorEntity):
         return { HISTORY_ATTR: "\n".join(events)}
     
     async def async_added_to_hass(self):
-        self._observer.attach(self.schedule_update_ha_state)
+        self._panel.history_observer.attach(self.schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self):
-        self._observer.detach(self.schedule_update_ha_state)
+        self._panel.history_observer.detach(self.schedule_update_ha_state)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for tracking panel history."""

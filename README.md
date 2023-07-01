@@ -9,4 +9,4 @@ contains custom attributes *ready_to_arm* (*no*|*home*|*away*), and a *faulted_p
 
 - A [BinarySensor](https://developers.home-assistant.io/docs/core/entity/binary-sensor) entity for each configured alarm point.
 
-- A [Sensor](https://developers.home-assistant.io/docs/core/entity/sensor/) entity for the panels history. The history itself is stored on a `history` attribute, as there is a limit to how much text a sensor can store in its state.
+- A [Sensor](https://developers.home-assistant.io/docs/core/entity/sensor/) entity for the panel's history. The history itself is stored on a `history` attribute, as there is a limit to how much text a sensor can store in its state.
