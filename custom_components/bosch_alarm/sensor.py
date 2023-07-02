@@ -42,7 +42,7 @@ class PanelHistorySensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         events = self._panel.events
-        return { HISTORY_ATTR: "\n".join(events)}
+        return { HISTORY_ATTR + f'_{e.date}': e.message for e in events }
     
     async def async_added_to_hass(self):
         self._panel.history_observer.attach(self.schedule_update_ha_state)
