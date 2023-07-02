@@ -30,7 +30,11 @@ class PanelHistorySensor(SensorEntity):
     def should_poll(self): return False
 
     @property
-    def state(self): return len(self._panel.history)
+    def state(self):
+        events = self._panel.events
+        if events:
+            return str(events[-1])
+        return "No events"
 
     @property
     def name(self): return f"{self._panel.model} History"
