@@ -69,7 +69,7 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
     
     def _arming_code_correct(self, code) -> bool:
         if self.code_format == alarm.CodeFormat.NUMBER:
-            return int(code) == self._arming_code
+            return int(code) == int(self._arming_code)
 
         if self.code_format == alarm.CodeFormat.TEXT:
             return code == self._arming_code
