@@ -68,21 +68,15 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         )
     
     def _arming_code_correct(self, code) -> bool:
-        if self.code_format == alarm.CodeFormat.NUMBER:
-            return int(code) == int(self._arming_code)
+        return code == self._arming_code
 
-        if self.code_format == alarm.CodeFormat.TEXT:
-            return code == self._arming_code
-
-        return True
-
-    async def async_alarm_disarm(self, code=0) -> None:
+    async def async_alarm_disarm(self, code=None) -> None:
         if self._arming_code_correct(code): 
             await self._panel.area_disarm(self._area_id)
-    async def async_alarm_arm_home(self, code=0) -> None:
+    async def async_alarm_arm_home(self, code=None) -> None:
         if self._arming_code_correct(code): 
             await self._panel.area_arm_part(self._area_id)
-    async def async_alarm_arm_away(self, code=0) -> None:
+    async def async_alarm_arm_away(self, code=None) -> None:
         if self._arming_code_correct(code): 
             await self._panel.area_arm_all(self._area_id)
 
