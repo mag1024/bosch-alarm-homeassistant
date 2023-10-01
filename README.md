@@ -11,7 +11,7 @@ contains custom attributes *ready_to_arm* (*no*|*home*|*away*), and a *faulted_p
 
 - A [Sensor](https://developers.home-assistant.io/docs/core/entity/sensor/) entity for the panel's history. The history itself is stored on a `history` attribute, as there is a limit to how much text a sensor can store in its state.
 
-- A [Switch](https://developers.home-assistant.io/docs/core/entity/switch) entity for the panel's outputs. Note that for the solution 2000/3000, only outputs with the type set to "remote output" will show here, as these are the only ones that can be controlled via mode 2.
+- A [Switch](https://developers.home-assistant.io/docs/core/entity/switch) entity for the each configured output. Note that for the solution 2000/3000, only outputs with the type set to "remote output" will show here, as these are the only ones that can be controlled via mode 2.
 
 ### Installation
 
