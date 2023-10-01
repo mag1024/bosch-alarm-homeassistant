@@ -8,5 +8,5 @@ def device_info_from_panel(panel):
         name=f"Bosch {panel.model}",
         manufacturer="Bosch Security Systems",
         model=panel.model,
-        sw_version=panel.protocol_version,
+        sw_version=panel.firmware_version,
     )
