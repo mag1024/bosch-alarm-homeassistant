@@ -16,11 +16,12 @@ from .device import device_info_from_panel
 _LOGGER = logging.getLogger(__name__)
 
 class PanelOutputEntity(SwitchEntity):
-    def __init__(self, id, observer, device_info, panel):
-        self._observer = observer
+    def __init__(self, id, output, device_info, panel):
+        self._observer = output.status_observer
         self._attr_device_info = device_info
         self._panel = panel
         self._id = id
+        self._output = output
 
     @property
     def unique_id(self): return f'{self._panel.serial_number}_output_{self._id}'
@@ -36,7 +37,7 @@ class PanelOutputEntity(SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        return self.output.is_active()
+        return self._output.is_active()
 
     async def async_turn_on(self, **kwargs):
         await self._panel.set_output_active(self._id)
@@ -51,6 +52,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     panel = hass.data[DOMAIN][config_entry.entry_id]
     device_info = device_info_from_panel(panel)
     async_add_entities(
-            PanelOutputEntity(id, output.status_observer, device_info, panel)
+            PanelOutputEntity(id, output, device_info, panel)
                 for (id, output) in panel.outputs.items())
 
