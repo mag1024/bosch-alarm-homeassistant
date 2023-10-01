@@ -51,6 +51,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     panel = hass.data[DOMAIN][config_entry.entry_id]
     device_info = device_info_from_panel(panel)
     async_add_entities(
-            PanelOutputEntity(id, output, device_info, panel)
+            PanelOutputEntity(id, output.status_observer, device_info, panel)
                 for (id, output) in panel.outputs.items())
 
