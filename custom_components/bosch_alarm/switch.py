@@ -38,6 +38,9 @@ class PanelOutputEntity(SwitchEntity):
     @property
     def is_on(self) -> bool:
         return self._output.is_active()
+    
+    @property
+    def name(self): return self._output.name
 
     async def async_turn_on(self, **kwargs):
         await self._panel.set_output_active(self._id)
