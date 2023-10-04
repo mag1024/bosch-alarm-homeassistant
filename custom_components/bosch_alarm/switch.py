@@ -1,4 +1,4 @@
-""" Support for Bosch Alarm Panel points as binary sensors """
+""" Support for Bosch Alarm Panel outputs as switches """
 
 from __future__ import annotations
 
