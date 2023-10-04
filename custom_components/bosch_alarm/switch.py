@@ -3,12 +3,8 @@
 from __future__ import annotations
 
 import logging
-import re
 
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity
-)
+from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
 from .device import device_info_from_panel
