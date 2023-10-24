@@ -58,8 +58,24 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
     finally:
         await panel.disconnect()
 
+    errors = {}
+
+    try:
+        await panel.connect(Panel.LOAD_BASIC_INFO)
+    except (PermissionError, ValueError):
+        errors["base"] = "invalid_auth"
+    except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
+        errors["base"] = "cannot_connect"
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    finally:
+        await panel.disconnect()
+    
+    if errors:
+        return (errors, None, None)
     # Return info that you want to store in the config entry.
-    return (panel.model, panel.serial_number)
+    return (None, panel.model, panel.serial_number)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -82,20 +98,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
+        (errors, model, serial_number) = await try_connect(self.hass, user_input)
 
-        try:
-            (model, serial_number) = await try_connect(self.hass, user_input)
+        if not errors:
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="Bosch %s" % model, data=user_input)
-        except (PermissionError, ValueError):
-            errors["base"] = "invalid_auth"
-        except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
-            errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -112,20 +120,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = entry.data
 
-        errors = {}
+        (errors, _, _) = await try_connect(self.hass, user_input)
 
-        try:
-            await try_connect(self.hass, user_input)
+        if not errors:
             self.hass.config_entries.async_update_entry(entry, data=user_input)
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
-        except (PermissionError, ValueError):
-            errors["base"] = "invalid_auth"
-        except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
-            errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+        
         return self.async_show_form(
             step_id="reauth", data_schema=self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input), errors=errors
         )
