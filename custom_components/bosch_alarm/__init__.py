@@ -8,6 +8,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from homeassistant.const import (
     CONF_HOST,
@@ -27,14 +28,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
-            automation_code=entry.data[CONF_PASSWORD], 
+            automation_code=entry.data[CONF_PASSWORD],
             installer_code=entry.data.get(CONF_INSTALLER_CODE, None))
     try:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
         _LOGGER.warning("Initial panel connection timed out...")
-    except ValueError as e:
-        raise e
+    except (ValueError, PermissionError) as ex:
+        raise ConfigEntryAuthFailed(ex) from ex
     except:
         logging.exception("Initial panel connection failed")
 
@@ -61,7 +62,6 @@ async def options_update_listener(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.data[DOMAIN][entry.entry_id].disconnect()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await hass.data[DOMAIN][entry.entry_id].disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)

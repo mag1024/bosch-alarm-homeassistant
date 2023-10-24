@@ -101,6 +101,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+
+        """Handle authenticating again if credentials are incorrect."""
+        entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        if user_input is None:
+            user_input = entry.data
+
+        errors = {}
+
+        try:
+            await try_connect(self.hass, user_input)
+            self.hass.config_entries.async_update_entry(entry, data=user_input)
+            await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+        except (PermissionError, ValueError):
+            errors["base"] = "invalid_auth"
+        except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
+            errors["base"] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return self.async_show_form(
+            step_id="reauth", data_schema=self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input), errors=errors
+        )
+
 class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
