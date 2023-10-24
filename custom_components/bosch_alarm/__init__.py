@@ -17,7 +17,7 @@ from homeassistant.const import (
 
 import bosch_alarm_mode2
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_INSTALLER_CODE
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR, 
                              Platform.SWITCH]
@@ -27,7 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
-            passcode=entry.data[CONF_PASSWORD])
+            automation_code=entry.data[CONF_PASSWORD], 
+            installer_code=entry.data.get(CONF_INSTALLER_CODE, None))
     try:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
