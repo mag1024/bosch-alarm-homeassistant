@@ -89,10 +89,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="Bosch %s" % model, data=user_input)
+        except (PermissionError, ValueError):
+            errors["base"] = "invalid_auth"
         except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
             errors["base"] = "cannot_connect"
-        except PermissionError:
-            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

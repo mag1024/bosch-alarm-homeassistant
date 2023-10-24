@@ -33,6 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
         _LOGGER.warning("Initial panel connection timed out...")
+    except ValueError:
+        logging.exception(
+            "Error with credentials. If you have just updated, you may need to delete your panel and add it again."
+        )
     except:
         logging.exception("Initial panel connection failed")
 
