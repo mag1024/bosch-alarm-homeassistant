@@ -24,7 +24,8 @@ from homeassistant.const import (
 from bosch_alarm_mode2 import Panel
 
 from .const import (
-    DOMAIN
+    DOMAIN,
+    CONF_INSTALLER_CODE
 )
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=7700): cv.positive_int,
         vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_INSTALLER_CODE): str,
     }
 )
 
@@ -50,7 +52,7 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     panel = Panel(host=data[CONF_HOST], port=data[CONF_PORT],
-                  passcode=data[CONF_PASSWORD])
+                  automation_code=data[CONF_PASSWORD], installer_code=data.get(CONF_INSTALLER_CODE, None))
     try:
         await panel.connect(Panel.LOAD_BASIC_INFO)
     finally:
