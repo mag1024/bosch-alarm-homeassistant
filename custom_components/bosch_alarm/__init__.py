@@ -35,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except asyncio.exceptions.TimeoutError:
         _LOGGER.warning("Initial panel connection timed out...")
     except (ValueError, PermissionError) as ex:
+        await panel.disconnect()
         raise ConfigEntryAuthFailed(ex) from ex
     except:
         logging.exception("Initial panel connection failed")
