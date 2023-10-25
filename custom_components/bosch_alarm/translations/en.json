@@ -14,15 +14,13 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "password": "Automation Passcode",
+                    "password": "Automation code",
                     "installer_code": "Installer Code (Solution / AMAX only)"
                 }
             },
             "reauth": {
                 "data": {
-                    "host": "Host",
-                    "port": "Port",
-                    "password": "Automation Passcode",
+                    "password": "Automation code",
                     "installer_code": "Installer Code (Solution / AMAX only)"
                 }
             }

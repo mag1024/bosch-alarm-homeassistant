@@ -38,6 +38,19 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_CODE_AUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_INSTALLER_CODE): str,
+    }
+)
+
+STEP_AUTOMATION_AUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
 STEP_INIT_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(
@@ -46,22 +59,17 @@ STEP_INIT_DATA_SCHEMA = vol.Schema(
     }
 )
 
-async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
+async def try_connect(hass: HomeAssistant, load_selector: int, data: dict[str, Any]):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     panel = Panel(host=data[CONF_HOST], port=data[CONF_PORT],
-                  automation_code=data[CONF_PASSWORD], installer_code=data.get(CONF_INSTALLER_CODE, None))
-    try:
-        await panel.connect(Panel.LOAD_BASIC_INFO)
-    finally:
-        await panel.disconnect()
-
+                  automation_code=data[CONF_PASSWORD], installer_code=data.get(CONF_INSTALLER_CODE, None)) 
     errors = {}
 
     try:
-        await panel.connect(Panel.LOAD_BASIC_INFO)
+        await panel.connect(load_selector)
     except (PermissionError, ValueError):
         errors["base"] = "invalid_auth"
     except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
@@ -73,9 +81,9 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
         await panel.disconnect()
     
     if errors:
-        return (errors, None, None)
-    # Return info that you want to store in the config entry.
-    return (None, panel.model, panel.serial_number)
+        raise Exception(errors)
+    
+    return (panel.model, panel.serial_number)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -93,43 +101,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        if "entry_id" in self.context:
+            entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+            )
+            if user_input is None:
+                user_input = entry.data
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
-
-        (errors, model, serial_number) = await try_connect(self.hass, user_input)
-
-        if not errors:
-            await self.async_set_unique_id(serial_number)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="Bosch %s" % model, data=user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        try:
+            (model, serial_number) = await try_connect(self.hass, Panel.LOAD_BASIC_INFO, user_input)
+            if "entry_id" in self.context:
+                entry = self.hass.config_entries.async_get_entry(
+                    self.context["entry_id"]
+                )
+                self.hass.config_entries.async_update_entry(entry, data=user_input)
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+            else:
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title="Bosch %s" % model, data=user_input)
+        except Exception as ex:
+            return self.async_show_form(
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=ex.args
+            )
 
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-
-        """Handle authenticating again if credentials are incorrect."""
-        entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        if user_input is None:
-            user_input = entry.data
-
-        (errors, _, _) = await try_connect(self.hass, user_input)
-
-        if not errors:
-            self.hass.config_entries.async_update_entry(entry, data=user_input)
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-        
-        return self.async_show_form(
-            step_id="reauth", data_schema=self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input), errors=errors
-        )
+       return self.async_step_user(user_input)
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
