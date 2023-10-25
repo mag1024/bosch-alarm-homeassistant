@@ -59,7 +59,7 @@ STEP_INIT_DATA_SCHEMA = vol.Schema(
     }
 )
 
-async def try_connect(hass: HomeAssistant, load_selector: int, data: dict[str, Any]):
+async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -69,7 +69,7 @@ async def try_connect(hass: HomeAssistant, load_selector: int, data: dict[str, A
     errors = {}
 
     try:
-        await panel.connect(load_selector)
+        await panel.connect(Panel.LOAD_BASIC_INFO)
     except (PermissionError, ValueError):
         errors["base"] = "invalid_auth"
     except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
@@ -103,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if "entry_id" in self.context:
             entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
+                self.context["entry_id"]
             )
             if user_input is None:
                 user_input = entry.data
@@ -112,7 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         try:
-            (model, serial_number) = await try_connect(self.hass, Panel.LOAD_BASIC_INFO, user_input)
+            (model, serial_number) = await try_connect(self.hass, user_input)
             if "entry_id" in self.context:
                 entry = self.hass.config_entries.async_get_entry(
                     self.context["entry_id"]
