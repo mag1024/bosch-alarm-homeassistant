@@ -126,7 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="Bosch %s" % model, data=user_input)
         except Exception as ex:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=ex.args
+                step_id="user", data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, user_input
+                ), errors=ex.args
             )
 
     async def async_step_reauth(
