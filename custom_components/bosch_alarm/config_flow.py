@@ -38,19 +38,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_CODE_AUTH_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_INSTALLER_CODE): str,
-    }
-)
-
-STEP_AUTOMATION_AUTH_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
 STEP_INIT_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(
