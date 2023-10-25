@@ -17,12 +17,6 @@
                     "password": "Automation code",
                     "installer_code": "Installer Code (Solution / AMAX only)"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "password": "Automation code",
-                    "installer_code": "Installer Code (Solution / AMAX only)"
-                }
             }
         }
     },
