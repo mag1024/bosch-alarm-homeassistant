@@ -15,7 +15,7 @@
                     "host": "Host",
                     "port": "Port",
                     "password": "Automation code",
-                    "installer_code": "Installer Code"
+                    "installer_code": "Installer code"
                 },
                 "description": "For Solution and AMAX panels, provide both your automation code and installer code.\nFor other panels, provide just your automation code.\nNote that your automation code needs to be at least 10 characters long, otherwise you won't be able to connect to your panel. \nThe automation code can be set in A-Link or RPS.\nYour installer code should have been provided by whoever set up your panel."
             }
@@ -28,8 +28,9 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "Arming Code"
-                }
+                    "code": "Arming code"
+                },
+                "description": "Specify an arming code if you wish to require a code for arming and disarming.\nThis code does not need to be related to any codes already set on your panel."
             }
         }
     }
