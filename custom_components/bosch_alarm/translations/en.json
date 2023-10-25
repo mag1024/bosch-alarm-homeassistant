@@ -17,7 +17,7 @@
                     "password": "Automation code",
                     "installer_code": "Installer Code"
                 },
-                "description": "For Solution and AMAX panels, provide both your Automation Code and Installer Code.\nFor other panels, provide just your Automation Code.\nNote that your Automation Code needs to be at least 10 characters long, otherwise you won't be able to connect to your panel."
+                "description": "For Solution and AMAX panels, provide both your Automation Code and Installer Code.\nFor other panels, provide just your Automation Code.\nNote that your Automation Code needs to be at least 10 characters long, otherwise you won't be able to connect to your panel. \nThe Automation code can be set in A-Link or RPS."
             }
         }
     },
