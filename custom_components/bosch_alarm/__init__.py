@@ -8,7 +8,6 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from homeassistant.const import (
     CONF_HOST,
@@ -34,9 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
         _LOGGER.warning("Initial panel connection timed out...")
-    except (ValueError, PermissionError) as ex:
-        await panel.disconnect()
-        raise ConfigEntryAuthFailed(ex) from ex
     except:
         logging.exception("Initial panel connection failed")
 
