@@ -71,7 +71,7 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any], load_selector: 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     panel = Panel(host=data[CONF_HOST], port=data[CONF_PORT],
-                  automation_code=data[CONF_PASSWORD], installer_or_user_code=data.get(CONF_INSTALLER_CODE, None)) 
+                  automation_code=data.get(CONF_PASSWORD, None), installer_or_user_code=data.get(CONF_INSTALLER_CODE, data.get(CONF_USER_CODE, None))) 
     
     try:
         await panel.connect(load_selector)
