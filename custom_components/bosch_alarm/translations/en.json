@@ -13,11 +13,20 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port",
+                    "port": "Port"
+                }
+            },
+            "auth": {
+                "data": {
                     "password": "Automation code",
-                    "installer_code": "Installer code"
+                    "installer_code": "Installer code",
+                    "user_code": "User code"
                 },
-                "description": "For Solution and AMAX panels, provide both your automation code and installer code.\nFor other panels, provide just your automation code.\nNote that your automation code needs to be at least 10 characters long, otherwise you won't be able to connect to your panel. \nThe automation code can be set in A-Link or RPS.\nYour installer code should have been provided by whoever set up your panel."
+                "data_description": {
+                    "password": "The Automation Code is required to access all panels using the Mode 2 protocol. It can be configured via the A-Link Plus or the Remote Programming Software (RPS). It needs to be set to a string that is at least 10 characters.",
+                    "installer_code": "The Installer Code is used to access the configuration interface. Typically, it is a 4 digit numeric pin.",
+                    "user_code": "The User Code is the code used to arm the panel. Typically, it is a 4 digit numeric pin."
+                }
             }
         }
     },
@@ -30,7 +39,9 @@
                 "data": {
                     "code": "Arming code"
                 },
-                "description": "Specify an arming code if you wish to require a code for arming and disarming.\nThis code does not need to be related to any codes already set on your panel."
+                "data_description": {
+                    "code": "The arming code is used to protect the arm/disarm operations locally within Home Assistant. It does not have to match any of the codes configured in the panel."
+                }
             }
         }
     }

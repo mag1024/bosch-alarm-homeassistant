@@ -18,23 +18,42 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_PASSWORD,
-    CONF_CODE
+    CONF_CODE,
+    CONF_MODEL
 )
 
 from bosch_alarm_mode2 import Panel
 
 from .const import (
     DOMAIN,
-    CONF_INSTALLER_CODE
+    CONF_INSTALLER_CODE,
+    CONF_USER_CODE
 )
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=7700): cv.positive_int,
+        vol.Required(CONF_PORT, default=7700): cv.positive_int
+    }
+)
+
+STEP_AUTH_DATA_SCHEMA_SOLUTION = vol.Schema(
+    {
+        vol.Required(CONF_USER_CODE): str,
+    }
+)
+
+STEP_AUTH_DATA_SCHEMA_AMAX = vol.Schema(
+    {
+        vol.Required(CONF_INSTALLER_CODE): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_INSTALLER_CODE): str,
+    }
+)
+
+STEP_AUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -46,29 +65,27 @@ STEP_INIT_DATA_SCHEMA = vol.Schema(
     }
 )
 
-async def try_connect(hass: HomeAssistant, data: dict[str, Any]):
+async def try_connect(hass: HomeAssistant, data: dict[str, Any], load_selector: int=0):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     panel = Panel(host=data[CONF_HOST], port=data[CONF_PORT],
-                  automation_code=data[CONF_PASSWORD], installer_code=data.get(CONF_INSTALLER_CODE, None)) 
-    errors = {}
-
+                  automation_code=data[CONF_PASSWORD], installer_or_user_code=data.get(CONF_INSTALLER_CODE, None)) 
+    
     try:
-        await panel.connect(Panel.LOAD_BASIC_INFO)
+        await panel.connect(load_selector)
     except (PermissionError, ValueError):
-        errors["base"] = "invalid_auth"
-    except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError):
-        errors["base"] = "cannot_connect"
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception")
-        errors["base"] = "unknown"
+        _LOGGER.exception(err)
+        raise RuntimeError("invalid_auth")
+    except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError) as err:
+        _LOGGER.exception(err)
+        raise RuntimeError("cannot_connect")
+    except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.exception(err)
+        raise RuntimeError("unknown")
     finally:
         await panel.disconnect()
-    
-    if errors:
-        raise Exception(errors)
     
     return (panel.model, panel.serial_number)
 
@@ -88,40 +105,51 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if "entry_id" in self.context:
-            entry = self.hass.config_entries.async_get_entry(
-                self.context["entry_id"]
-            )
-            if user_input is None:
-                user_input = entry.data
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         try:
-            (model, serial_number) = await try_connect(self.hass, user_input)
-            if "entry_id" in self.context:
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
-                )
-                self.hass.config_entries.async_update_entry(entry, data=user_input)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-            else:
-                await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="Bosch %s" % model, data=user_input)
+            (model, serial_number) = await try_connect(self.hass, user_input)   
+            user_input[CONF_MODEL] = model        
+            return await self.async_step_auth(user_input)
         except Exception as ex:
             return self.async_show_form(
                 step_id="user", data_schema=self.add_suggested_values_to_schema(
                     STEP_USER_DATA_SCHEMA, user_input
-                ), errors=ex.args
+                ), errors=[ex.args]
             )
-
-    async def async_step_reauth(
+    async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-       return await self.async_step_user(user_input)
+        """Handle the auth step."""
+        if user_input is None:
+            return await self.async_step_user(user_input)
+        if "Solution" in user_input[CONF_MODEL]:
+            necessary_conf = [CONF_USER_CODE]
+            schema = STEP_AUTH_DATA_SCHEMA_SOLUTION
+        elif "AMAX" in user_input[CONF_MODEL]:
+            necessary_conf = [CONF_INSTALLER_CODE, CONF_CODE]
+            schema = STEP_AUTH_DATA_SCHEMA_AMAX
+        else:
+            necessary_conf = [CONF_CODE]
+            schema = STEP_AUTH_DATA_SCHEMA
+        for code in necessary_conf:
+            if not code in user_input:
+                return self.async_show_form(
+                    step_id="auth", data_schema=schema
+                )
+        try:
+            (model, serial_number) = await try_connect(self.hass, user_input, Panel.LOAD_BASIC_INFO)
+            await self.async_set_unique_id(serial_number)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title="Bosch %s" % model, data=user_input)
+        except Exception as ex:
+            return self.async_show_form(
+                step_id="auth", data_schema=self.add_suggested_values_to_schema(
+                    schema, user_input
+                ), errors=[ex.args]
+            )
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
