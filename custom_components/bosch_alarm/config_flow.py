@@ -110,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         try:
-            (model, _) = await try_connect(self.hass, user_input, Panel.LOAD_NO_AUTH)
+            (model, _) = await try_connect(self.hass, user_input, 0)
             self.model = model
             self.data = user_input
             return await self.async_step_auth()
@@ -138,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         self.data.update(user_input)
         try:
-            (model, serial_number) = await try_connect(self.hass, self.data, Panel.LOAD_BASIC_INFO)
+            (model, serial_number) = await try_connect(self.hass, self.data, Panel.LOAD_EXTENDED_INFO)
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="Bosch %s" % model, data=self.data)
