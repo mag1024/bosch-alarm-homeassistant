@@ -60,9 +60,7 @@ async def options_update_listener(
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
-
     if config_entry.version == 1:
-
         new = {**config_entry.data}
 
         # Solution panels previously put the user code in the password field

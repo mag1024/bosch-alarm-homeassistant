@@ -49,7 +49,7 @@ STEP_AUTH_DATA_SCHEMA_AMAX = vol.Schema(
     }
 )
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_AUTH_DATA_SCHEMA_BG = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): str,
     }
@@ -69,7 +69,8 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any], load_selector: 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     panel = Panel(host=data[CONF_HOST], port=data[CONF_PORT],
-                  automation_code=data.get(CONF_PASSWORD, None), installer_or_user_code=data.get(CONF_INSTALLER_CODE, data.get(CONF_USER_CODE, None)))
+                  automation_code=data.get(CONF_PASSWORD, None), 
+                  installer_or_user_code=data.get(CONF_INSTALLER_CODE, data.get(CONF_USER_CODE, None)))
 
     try:
         await panel.connect(load_selector)
@@ -110,6 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         try:
+            # Use load_selector = 0 to fetch the panel model without authentication. 
             (model, _) = await try_connect(self.hass, user_input, 0)
             self.model = model
             self.data = user_input
@@ -130,7 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         elif "AMAX" in self.model:
             schema = STEP_AUTH_DATA_SCHEMA_AMAX
         else:
-            schema = STEP_AUTH_DATA_SCHEMA
+            schema = STEP_AUTH_DATA_SCHEMA_BG
 
         if user_input is None:
             return self.async_show_form(
