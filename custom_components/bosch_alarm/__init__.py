@@ -17,9 +17,9 @@ from homeassistant.const import (
 
 import bosch_alarm_mode2
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_INSTALLER_CODE, CONF_USER_CODE
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR, 
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR,
                              Platform.SWITCH]
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
     panel = bosch_alarm_mode2.Panel(
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
-            passcode=entry.data[CONF_PASSWORD])
+            automation_code=entry.data.get(CONF_PASSWORD, None),
+            installer_or_user_code=entry.data.get(CONF_INSTALLER_CODE, entry.data.get(CONF_USER_CODE, None)))
     try:
         await panel.connect()
     except asyncio.exceptions.TimeoutError:
@@ -56,9 +57,26 @@ async def options_update_listener(
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        # Solution panels previously put the user code in the password field
+        # But now its in the user code field
+        if "Solution" in config_entry.title:
+            new[CONF_USER_CODE] = new[CONF_PASSWORD]
+            new.pop(CONF_PASSWORD)
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+
+    return True
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.data[DOMAIN][entry.entry_id].disconnect()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await hass.data[DOMAIN][entry.entry_id].disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)

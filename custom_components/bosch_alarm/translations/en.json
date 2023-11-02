@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Device successfully reconfigured"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -12,8 +13,19 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port",
-                    "password": "Automation Passcode \\ RSC+ Passcode"
+                    "port": "Port"
+                }
+            },
+            "auth": {
+                "data": {
+                    "password": "Automation code",
+                    "installer_code": "Installer code",
+                    "user_code": "User code"
+                },
+                "data_description": {
+                    "password": "The Automation Code is required to access all panels using the Mode 2 protocol. It can be configured via the A-Link Plus or the Remote Programming Software (RPS). It needs to be set to a string that is at least 10 characters.",
+                    "installer_code": "The Installer Code is used to access the configuration interface. Typically, it is a 4 digit numeric pin.",
+                    "user_code": "The User Code is the code used to arm the panel. Typically, it is a 4 digit numeric pin."
                 }
             }
         }
@@ -25,7 +37,10 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "Arming Code"
+                    "code": "Arming code"
+                },
+                "data_description": {
+                    "code": "The arming code is used to protect the arm/disarm operations locally within Home Assistant. It does not have to match any of the codes configured in the panel."
                 }
             }
         }
