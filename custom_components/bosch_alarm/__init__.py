@@ -41,6 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = panel
 
     def setup():
+        # Some panels don't support retrieving a serial number.
+        # We still need some form of identifier, so fall back
+        # to the entry id.
         if not panel.serial_number:
             panel.serial_number = entry.entry_id
 
