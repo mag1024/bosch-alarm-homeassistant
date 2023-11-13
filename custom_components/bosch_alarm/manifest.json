@@ -1,18 +1,18 @@
 {
   "domain": "bosch_alarm",
   "name": "Bosch Alarm",
-  "version": "0.1.0",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
-  "issue_tracker": "https://github.com/mag1024/bosch-alarm-homeassistant/issues",
-  "requirements": ["bosch-alarm-mode2==0.3.29"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@mag1024",
     "@sanjay900"
   ],
-  "iot_class": "local_push"
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
+  "homekit": {},
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/mag1024/bosch-alarm-homeassistant/issues",
+  "requirements": ["bosch-alarm-mode2==0.3.29"],
+  "ssdp": [],
+  "version": "0.1.0",
+  "zeroconf": []
 }
