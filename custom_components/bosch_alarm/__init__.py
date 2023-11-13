@@ -49,9 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # Remove old devices using the panel model as an identifier
         dr = device_registry.async_get(hass)
-        for device_entry in device_registry.async_entries_for_config_entry(
-            dr, entry.entry_id
-        ):
+        for device_entry in device_registry.async_entries_for_config_entry(dr, entry.entry_id):
             if (DOMAIN, panel.model) in device_entry.identifiers:
                 dr.async_remove_device(device_entry.id)
 
