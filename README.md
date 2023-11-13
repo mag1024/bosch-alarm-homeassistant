@@ -1,4 +1,6 @@
-## Home Assistant integration using the bosch-alarm-mode2 library.
+### Home Assistant integration using the [bosch-alarm-mode2](https://github.com/mag1024/bosch-alarm-mode2) library.
+
+![Screenshot 2023-11-13 at 00 44 23](https://github.com/mag1024/bosch-alarm-homeassistant/assets/787978/9aa89cc8-f513-4363-bef4-1b5eb5af082e)
 
 ### This integration provides
 - An [AlarmControlPanel](https://developers.home-assistant.io/docs/core/entity/alarm-control-panel/)
