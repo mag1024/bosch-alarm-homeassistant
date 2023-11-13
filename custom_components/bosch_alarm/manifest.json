@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
+  "issue_tracker": "https://github.com/mag1024/bosch-alarm-homeassistant/issues",
   "requirements": ["bosch-alarm-mode2==0.3.29"],
   "ssdp": [],
   "zeroconf": [],
