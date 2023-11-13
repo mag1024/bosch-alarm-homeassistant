@@ -8,6 +8,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry
 
 from homeassistant.const import (
     CONF_HOST,
@@ -40,6 +41,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = panel
 
     def setup():
+        # Some panels don't support retrieving a serial number.
+        # We still need some form of identifier, so fall back
+        # to the entry id.
+        if not panel.serial_number:
+            panel.serial_number = entry.entry_id
+
+        # Remove old devices using the panel model as an identifier
+        dr = device_registry.async_get(hass)
+        for device_entry in device_registry.async_entries_for_config_entry(dr, entry.entry_id):
+            if (DOMAIN, panel.model) in device_entry.identifiers:
+                dr.async_remove_device(device_entry.id)
+
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     if panel.connection_status():
