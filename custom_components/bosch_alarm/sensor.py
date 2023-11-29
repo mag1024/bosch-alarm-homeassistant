@@ -49,10 +49,39 @@ class PanelHistorySensor(SensorEntity):
 
     async def async_will_remove_from_hass(self):
         self._panel.history_observer.detach(self.schedule_update_ha_state)
+class PanelFaultsSensor(SensorEntity):
+    def __init__(self, panel):
+        self._panel = panel
+        self._attr_device_info = device_info_from_panel(panel)
+
+    @property
+    def icon(self): return "mdi:alert-circle"
+
+    @property
+    def unique_id(self): return f'{self._panel.serial_number}_faults'
+
+    @property
+    def should_poll(self): return False
+
+    @property
+    def state(self):
+        faults = self._panel.panel_faults
+        if faults:
+            return "\n".join(faults)
+        return "No faults"
+
+    @property
+    def name(self): return f"{self._panel.model} Faults"
+    
+    async def async_added_to_hass(self):
+        self._panel.faults_observer.attach(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        self._panel.faults_observer.detach(self.schedule_update_ha_state)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for tracking panel history."""
 
     panel = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([PanelHistorySensor(panel)])
+    async_add_entities([PanelHistorySensor(panel), PanelFaultsSensor(panel)])
 
