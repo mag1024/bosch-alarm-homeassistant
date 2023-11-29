@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
+from homeassistant.util import dt
 
 from homeassistant.const import (
     CONF_HOST,
@@ -39,6 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel
+    def set_panel_date(call):
+        return panel.set_panel_date(dt.utcnow())
 
     def setup():
         # Some panels don't support retrieving a serial number.
@@ -53,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if (DOMAIN, panel.model) in device_entry.identifiers:
                 dr.async_remove_device(device_entry.id)
 
+        hass.services.register(DOMAIN, "set_date_time", set_panel_date)
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     if panel.connection_status():

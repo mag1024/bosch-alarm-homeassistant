@@ -1,0 +1,4 @@
+set_date_time:
+  target:
+    entity:
+      domain: alarm_control_panel
