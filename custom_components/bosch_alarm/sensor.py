@@ -66,9 +66,7 @@ class PanelFaultsSensor(SensorEntity):
     @property
     def state(self):
         faults = self._panel.panel_faults
-        if faults:
-            return "\n".join(faults)
-        return "No faults"
+        return "\n".join(faults) if faults else "No faults"
 
     @property
     def name(self): return f"{self._panel.model} Faults"
