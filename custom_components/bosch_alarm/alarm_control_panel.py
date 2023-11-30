@@ -11,7 +11,7 @@ from homeassistant.components.alarm_control_panel import (
 import homeassistant.components.alarm_control_panel as alarm
 
 from homeassistant.const import CONF_CODE
-from homeassistant.helpers import config_validation , entity_platform
+from homeassistant.helpers import config_validation, entity_platform
 from homeassistant.util import dt
 
 import voluptuous as vol
