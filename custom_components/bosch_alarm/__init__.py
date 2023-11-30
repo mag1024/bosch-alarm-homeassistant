@@ -8,30 +8,20 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry, config_validation
-from homeassistant.util import dt
-from homeassistant.helpers.service import async_extract_config_entry_ids
-import voluptuous as vol
-import datetime
+from homeassistant.helpers import device_registry
 
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    CONF_PASSWORD,
-    ATTR_ENTITY_ID
+    CONF_PASSWORD
 )
 
 import bosch_alarm_mode2
 
-from .const import DOMAIN, CONF_INSTALLER_CODE, CONF_USER_CODE, ATTR_DATETIME
+from .const import DOMAIN, CONF_INSTALLER_CODE, CONF_USER_CODE
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR,
                              Platform.SWITCH]
-SET_DATE_TIME_SERVICE_NAME = "set_date_time"
-SET_DATE_TIME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_DATETIME): config_validation.datetime,
-    ATTR_ENTITY_ID: config_validation.entity_ids
-})
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -49,11 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel
-    async def set_panel_date(service_call):
-        value: datetime = service_call.data.get(ATTR_DATETIME, dt.utcnow())
-        for entry_id in await async_extract_config_entry_ids(hass, service_call):
-            entry_panel = hass.data[DOMAIN][entry_id]
-            await entry_panel.set_panel_date(value)
 
 
     def setup():
@@ -77,8 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 lambda: panel.connection_status() and setup())
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
-
-    hass.services.async_register(DOMAIN, SET_DATE_TIME_SERVICE_NAME, set_panel_date, SET_DATE_TIME_SCHEMA)
     return True
 
 async def options_update_listener(

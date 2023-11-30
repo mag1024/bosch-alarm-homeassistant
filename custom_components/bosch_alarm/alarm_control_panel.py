@@ -11,8 +11,13 @@ from homeassistant.components.alarm_control_panel import (
 import homeassistant.components.alarm_control_panel as alarm
 
 from homeassistant.const import CONF_CODE
+from homeassistant.helpers import config_validation , entity_platform
+from homeassistant.util import dt
 
-from .const import DOMAIN
+import voluptuous as vol
+import datetime
+
+from .const import DOMAIN, ATTR_DATETIME
 from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +28,11 @@ READY_STATE_HOME = 'home'
 READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
 ALARMS_ATTR = 'alarms'
+
+SET_DATE_TIME_SERVICE_NAME = "set_date_time"
+SET_DATE_TIME_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_DATETIME): config_validation.datetime
+})
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
     def __init__(self, panel, arming_code, area_id, area, unique_id):
@@ -99,13 +109,19 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         self._area.alarm_observer.detach(self.schedule_update_ha_state)
         self._area.ready_observer.detach(self.schedule_update_ha_state)
 
+async def set_panel_date(entity, service_call):
+    value: datetime = service_call.data.get(ATTR_DATETIME, dt.utcnow())
+    entity.panel.set_panel_date(value)
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
-
+    platform = entity_platform.async_get_current_platform()
     panel = hass.data[DOMAIN][config_entry.entry_id]
 
     arming_code = config_entry.options.get(CONF_CODE, None)
     async_add_entities(
             AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
                 for (id, area) in panel.areas.items())
+
+    platform.async_register_entity_service(SET_DATE_TIME_SERVICE_NAME, SET_DATE_TIME_SCHEMA, set_panel_date)
 
