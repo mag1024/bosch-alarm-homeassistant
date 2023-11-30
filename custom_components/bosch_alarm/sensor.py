@@ -54,6 +54,7 @@ class PanelHistorySensor(PanelSensor):
     def extra_state_attributes(self):
         events = self._panel.events
         return { HISTORY_ATTR + f'_{e.date}': e.message for e in events }
+
 class PanelFaultsSensor(PanelSensor):
     def __init__(self, panel):
         super().__init__(panel, panel.faults_observer)
