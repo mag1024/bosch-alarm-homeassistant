@@ -19,7 +19,7 @@ import voluptuous as vol
 import datetime
 from typing import Any
 
-from .const import DOMAIN, DATETIME_ATTR
+from .const import DOMAIN
 from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ READY_STATE_HOME = 'home'
 READY_STATE_AWAY = 'away'
 FAULTED_POINTS_ATTR = 'faulted_points'
 ALARMS_ATTR = 'alarms'
+DATETIME_ATTR = 'datetime'
 
 SET_DATE_TIME_SERVICE_NAME = "set_date_time"
 SET_DATE_TIME_SCHEMA = make_entity_service_schema({
