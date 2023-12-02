@@ -19,7 +19,7 @@ import voluptuous as vol
 import datetime
 from typing import Any
 
-from .const import DOMAIN, ATTR_DATETIME
+from .const import DOMAIN, DATETIME_ATTR
 from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ ALARMS_ATTR = 'alarms'
 
 SET_DATE_TIME_SERVICE_NAME = "set_date_time"
 SET_DATE_TIME_SCHEMA = make_entity_service_schema({
-    vol.Optional(ATTR_DATETIME): config_validation.datetime
+    vol.Optional(DATETIME_ATTR): config_validation.datetime
 })
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
@@ -112,12 +112,11 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         self._area.ready_observer.detach(self.schedule_update_ha_state)
 
     async def set_panel_date(self, **kwargs: Any):
-        value: datetime = kwargs.get(ATTR_DATETIME, dt.utcnow())
+        value: datetime = kwargs.get(DATETIME_ATTR, dt.now())
         await self._panel.set_panel_date(value)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
-    platform = entity_platform.async_get_current_platform()
     panel = hass.data[DOMAIN][config_entry.entry_id]
 
     arming_code = config_entry.options.get(CONF_CODE, None)
@@ -125,5 +124,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
                 for (id, area) in panel.areas.items())
 
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SET_DATE_TIME_SERVICE_NAME, SET_DATE_TIME_SCHEMA, "set_panel_date")
 
