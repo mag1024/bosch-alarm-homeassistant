@@ -52,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device_entry in device_registry.async_entries_for_config_entry(dr, entry.entry_id):
             if (DOMAIN, panel.model) in device_entry.identifiers:
                 dr.async_remove_device(device_entry.id)
+
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     if panel.connection_status():
