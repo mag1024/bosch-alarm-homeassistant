@@ -44,5 +44,11 @@
                 }
             }
         }
+    },
+    "services": {
+      "set_date_time": {
+        "name": "Set panel date and time",
+        "description": "Set the panels date and time"
+      }
     }
 }
