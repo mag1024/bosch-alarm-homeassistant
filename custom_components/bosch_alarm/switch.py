@@ -12,16 +12,17 @@ from .device import device_info_from_panel
 _LOGGER = logging.getLogger(__name__)
 
 class PanelOutputEntity(SwitchEntity):
-    def __init__(self, id, output, device_info, panel):
+    def __init__(self, id, output, device_info, data):
         self._observer = output.status_observer
         self._attr_has_entity_name = True
         self._attr_device_info = device_info
-        self._panel = panel
+        self._panel = data.panel
+        self._data = data
         self._id = id
         self._output = output
 
     @property
-    def unique_id(self): return f'{self._panel.serial_number}_output_{self._id}'
+    def unique_id(self): return f'{self._data.unique_id}_output_{self._id}'
 
     @property
     def should_poll(self): return False
@@ -53,9 +54,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     panel = data.panel
 
     def setup():
-        device_info = device_info_from_panel(panel)
+        device_info = device_info_from_panel(data)
         async_add_entities(
-            PanelOutputEntity(id, output, device_info, panel)
+            PanelOutputEntity(id, output, device_info, data)
                 for (id, output) in panel.outputs.items())
 
     data.register_entity_setup(setup)

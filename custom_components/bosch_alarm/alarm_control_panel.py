@@ -38,14 +38,14 @@ SET_DATE_TIME_SCHEMA = make_entity_service_schema({
 })
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
-    def __init__(self, panel, arming_code, area_id, area, unique_id):
-        self._panel = panel
+    def __init__(self, data, arming_code, area_id, area, unique_id):
+        self._panel = data.panel
         self._area_id = area_id
         self._area = area
         self._unique_id = unique_id
         self._arming_code = arming_code
         self._attr_has_entity_name = True
-        self._attr_device_info = device_info_from_panel(panel)
+        self._attr_device_info = device_info_from_panel(data)
 
     @property
     def code_format(self) -> alarm.CodeFormat | None:
@@ -126,7 +126,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def setup():
         async_add_entities(
-            AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
+            AreaAlarmControlPanel(data, arming_code, id, area, f'{data.unique_id}_area_{id}')
                 for (id, area) in panel.areas.items())
 
     data.register_entity_setup(setup)

@@ -15,10 +15,11 @@ from .device import device_info_from_panel
 _LOGGER = logging.getLogger(__name__)
 
 class PanelSensor(SensorEntity):
-    def __init__(self, panel, observer):
-        self._panel = panel
+    def __init__(self, data, observer):
+        self._data = data
+        self._panel = data.panel
         self._attr_has_entity_name = True
-        self._attr_device_info = device_info_from_panel(panel)
+        self._attr_device_info = device_info_from_panel(data)
         self._observer = observer
 
     @property
@@ -31,15 +32,15 @@ class PanelSensor(SensorEntity):
         self._observer.detach(self.schedule_update_ha_state)
 
 class PanelHistorySensor(PanelSensor):
-    def __init__(self, panel):
-        super().__init__(panel, panel.history_observer)
+    def __init__(self, data):
+        super().__init__(data, data.panel.history_observer)
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def icon(self): return "mdi:history"
 
     @property
-    def unique_id(self): return f'{self._panel.serial_number}_history'
+    def unique_id(self): return f'{self._data.unique_id}_history'
 
     @property
     def state(self):
@@ -57,14 +58,14 @@ class PanelHistorySensor(PanelSensor):
         return { HISTORY_ATTR + f'_{e.date}': e.message for e in events }
 
 class PanelFaultsSensor(PanelSensor):
-    def __init__(self, panel):
-        super().__init__(panel, panel.faults_observer)
+    def __init__(self, data):
+        super().__init__(data, data.panel.faults_observer)
 
     @property
     def icon(self): return "mdi:alert-circle"
 
     @property
-    def unique_id(self): return f'{self._panel.serial_number}_faults'
+    def unique_id(self): return f'{self._data.unique_id}_faults'
 
     @property
     def state(self):
@@ -72,11 +73,11 @@ class PanelFaultsSensor(PanelSensor):
         return "\n".join(faults) if faults else "No faults"
 
     @property
-    def name(self): return f"{self._panel.model} Faults"
+    def name(self): return f"Faults"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for tracking panel history."""
 
-    panel = hass.data[DOMAIN][config_entry.entry_id].panel
-    async_add_entities([PanelHistorySensor(panel), PanelFaultsSensor(panel)])
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities([PanelHistorySensor(data), PanelFaultsSensor(data)])
 
