@@ -40,28 +40,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel
 
-    def setup():
-        # Some panels don't support retrieving a serial number.
-        # We still need some form of identifier, so fall back
-        # to the entry id.
-        if not panel.serial_number:
-            panel.serial_number = entry.entry_id
+    # We store the serial number as the unique id
+    # If the panel doesn't expose it's serial number, use the entry id as a unique id instead.
+    panel.serial_number = entry.unique_id or entry.entry_id
 
-        # Remove old devices using the panel model as an identifier
-        dr = device_registry.async_get(hass)
-        for device_entry in device_registry.async_entries_for_config_entry(dr, entry.entry_id):
-            if (DOMAIN, panel.model) in device_entry.identifiers:
-                dr.async_remove_device(device_entry.id)
-
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
-    if panel.connection_status():
-        setup()
-    else:
-        panel.connection_status_observer.attach(
-                lambda: panel.connection_status() and setup())
+    # Remove old devices using the panel model as an identifier
+    # We use the panels model as the entries title
+    panel.model = entry.title.replace("Bosch ","")
+    dr = device_registry.async_get(hass)
+    for device_entry in device_registry.async_entries_for_config_entry(dr, entry.entry_id):
+        if (DOMAIN, panel.model) in device_entry.identifiers:
+            dr.async_remove_device(device_entry.id)
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     return True
 
 async def options_update_listener(
