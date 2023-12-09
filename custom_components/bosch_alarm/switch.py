@@ -49,9 +49,14 @@ class PanelOutputEntity(SwitchEntity):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switch entities for outputs"""
 
-    panel = hass.data[DOMAIN][config_entry.entry_id]
-    device_info = device_info_from_panel(panel)
-    async_add_entities(
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    panel = data.panel
+
+    def setup():
+        device_info = device_info_from_panel(panel)
+        async_add_entities(
             PanelOutputEntity(id, output, device_info, panel)
                 for (id, output) in panel.outputs.items())
+
+    data.register_entity_setup(setup)
 

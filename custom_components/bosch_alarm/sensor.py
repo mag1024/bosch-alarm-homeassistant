@@ -23,7 +23,7 @@ class PanelSensor(SensorEntity):
 
     @property
     def should_poll(self): return False
-    
+
     async def async_added_to_hass(self):
         self._observer.attach(self.schedule_update_ha_state)
 
@@ -77,6 +77,6 @@ class PanelFaultsSensor(PanelSensor):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for tracking panel history."""
 
-    panel = hass.data[DOMAIN][config_entry.entry_id]
+    panel = hass.data[DOMAIN][config_entry.entry_id].panel
     async_add_entities([PanelHistorySensor(panel), PanelFaultsSensor(panel)])
 

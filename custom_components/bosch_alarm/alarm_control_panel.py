@@ -119,12 +119,17 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
-    panel = hass.data[DOMAIN][config_entry.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    panel = data.panel
 
     arming_code = config_entry.options.get(CONF_CODE, None)
-    async_add_entities(
+
+    def setup():
+        async_add_entities(
             AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
                 for (id, area) in panel.areas.items())
+
+    data.register_entity_setup(setup)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SET_DATE_TIME_SERVICE_NAME, SET_DATE_TIME_SCHEMA, "set_panel_date")

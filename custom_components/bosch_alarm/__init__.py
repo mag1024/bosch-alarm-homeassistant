@@ -18,6 +18,8 @@ from homeassistant.const import (
 
 import bosch_alarm_mode2
 
+from .device import BoschPanel
+
 from .const import DOMAIN, CONF_INSTALLER_CODE, CONF_USER_CODE
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR,
@@ -30,10 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             automation_code=entry.data.get(CONF_PASSWORD, None),
             installer_or_user_code=entry.data.get(CONF_INSTALLER_CODE, entry.data.get(CONF_USER_CODE, None)))
-    entry.async_create_background_task(hass, panel.connect(), "connection")
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = panel
+    hass.data[DOMAIN][entry.entry_id] = BoschPanel(panel)
 
     # We store the serial number as the unique id
     # If the panel doesn't expose it's serial number, use the entry id as a unique id instead.
@@ -52,6 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
+
+    entry.async_create_background_task(hass, panel.connect(), "connection")
+
     return True
 
 async def options_update_listener(

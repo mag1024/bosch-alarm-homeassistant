@@ -89,12 +89,16 @@ class ConnectionStatusSensor(PanelBinarySensor):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up binary sensors for alarm points and the connection status."""
 
-    panel = hass.data[DOMAIN][config_entry.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    panel = data.panel
+
     async_add_entities(
             [ConnectionStatusSensor(
                 panel, f'{panel.serial_number}_connection_status')])
-    device_info = device_info_from_panel(panel)
-    async_add_entities(
-            PointSensor(point, f'{panel.serial_number}_point_{id}', device_info)
-                for (id, point) in panel.points.items())
+    def setup():
+        device_info = device_info_from_panel(panel)
+        async_add_entities(
+                PointSensor(point, f'{panel.serial_number}_point_{id}', device_info)
+                    for (id, point) in panel.points.items())
 
+    data.register_entity_setup(setup)
