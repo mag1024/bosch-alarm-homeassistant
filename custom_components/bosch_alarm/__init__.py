@@ -30,12 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             automation_code=entry.data.get(CONF_PASSWORD, None),
             installer_or_user_code=entry.data.get(CONF_INSTALLER_CODE, entry.data.get(CONF_USER_CODE, None)))
-    try:
-        await panel.connect()
-    except asyncio.exceptions.TimeoutError:
-        _LOGGER.warning("Initial panel connection timed out...")
-    except:
-        logging.exception("Initial panel connection failed")
+    entry.async_create_background_task(hass, panel.connect(), "connection")
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = panel

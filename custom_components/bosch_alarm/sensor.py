@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class PanelHistorySensor(SensorEntity):
     def __init__(self, panel):
         self._panel = panel
+        self._attr_has_entity_name = True
         self._attr_device_info = device_info_from_panel(panel)
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -37,13 +38,13 @@ class PanelHistorySensor(SensorEntity):
         return "No events"
 
     @property
-    def name(self): return f"{self._panel.model} History"
+    def name(self): return f"History"
 
     @property
     def extra_state_attributes(self):
         events = self._panel.events
         return { HISTORY_ATTR + f'_{e.date}': e.message for e in events }
-    
+
     async def async_added_to_hass(self):
         self._panel.history_observer.attach(self.schedule_update_ha_state)
 

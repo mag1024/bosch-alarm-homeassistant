@@ -31,12 +31,13 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         self._area = area
         self._unique_id = unique_id
         self._arming_code = arming_code
+        self._attr_has_entity_name = True
         self._attr_device_info = device_info_from_panel(panel)
-    
+
     @property
     def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
-        if self._arming_code is None: 
+        if self._arming_code is None:
             return None
         if self._arming_code.isnumeric():
             return alarm.CodeFormat.NUMBER
@@ -66,18 +67,18 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
             AlarmControlPanelEntityFeature.ARM_HOME
             | AlarmControlPanelEntityFeature.ARM_AWAY
         )
-    
+
     def _arming_code_correct(self, code) -> bool:
         return code == self._arming_code
 
     async def async_alarm_disarm(self, code=None) -> None:
-        if self._arming_code_correct(code): 
+        if self._arming_code_correct(code):
             await self._panel.area_disarm(self._area_id)
     async def async_alarm_arm_home(self, code=None) -> None:
-        if self._arming_code_correct(code): 
+        if self._arming_code_correct(code):
             await self._panel.area_arm_part(self._area_id)
     async def async_alarm_arm_away(self, code=None) -> None:
-        if self._arming_code_correct(code): 
+        if self._arming_code_correct(code):
             await self._panel.area_arm_all(self._area_id)
 
     @property

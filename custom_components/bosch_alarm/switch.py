@@ -14,6 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 class PanelOutputEntity(SwitchEntity):
     def __init__(self, id, output, device_info, panel):
         self._observer = output.status_observer
+        self._attr_has_entity_name = True
         self._attr_device_info = device_info
         self._panel = panel
         self._id = id
@@ -34,7 +35,7 @@ class PanelOutputEntity(SwitchEntity):
     @property
     def is_on(self) -> bool:
         return self._output.is_active()
-    
+
     @property
     def name(self): return self._output.name
 

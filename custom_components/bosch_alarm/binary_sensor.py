@@ -34,6 +34,7 @@ class PanelBinarySensor(BinarySensorEntity):
     def __init__(self, observer, unique_id, device_info):
         self._observer = observer
         self._unique_id = unique_id
+        self._attr_has_entity_name = True
         self._attr_device_info = device_info
 
     @property
@@ -76,7 +77,7 @@ class ConnectionStatusSensor(PanelBinarySensor):
         self._panel = panel
 
     @property
-    def name(self): return f"{self._panel.model} Connection Status"
+    def name(self): return f"Connection Status"
 
     @property
     def is_on(self): return self._panel.connection_status()
