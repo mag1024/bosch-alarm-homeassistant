@@ -11,7 +11,7 @@
   "homekit": {},
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/mag1024/bosch-alarm-homeassistant/issues",
-  "requirements": ["bosch-alarm-mode2==0.3.33"],
+  "requirements": ["bosch-alarm-mode2==0.3.34"],
   "ssdp": [],
   "version": "0.1.0",
   "zeroconf": []
