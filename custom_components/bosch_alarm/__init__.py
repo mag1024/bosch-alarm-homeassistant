@@ -13,12 +13,13 @@ from homeassistant.helpers import device_registry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    CONF_PASSWORD
+    CONF_PASSWORD,
+    CONF_MODEL
 )
 
 import bosch_alarm_mode2
 
-from .device import BoschPanel
+from .device import PanelConnection
 
 from .const import DOMAIN, CONF_INSTALLER_CODE, CONF_USER_CODE
 
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # The config flow sets the entries title to the panel's model
     model = entry.title.replace("Bosch ","")
 
-    data = BoschPanel(panel, unique_id, model)
+    data = PanelConnection(panel, unique_id, model)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = data
@@ -67,15 +68,19 @@ async def options_update_listener(
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
+    new = {**config_entry.data}
     if config_entry.version == 1:
-        new = {**config_entry.data}
         # Solution panels previously put the user code in the password field
         # But now its in the user code field
         if "Solution" in config_entry.title:
             new[CONF_USER_CODE] = new[CONF_PASSWORD]
             new.pop(CONF_PASSWORD)
 
-        config_entry.version = 2
+    if config_entry.version < 3:
+        # The config flow sets the entries title to the panel's model
+        new[CONF_MODEL] = config_entry.title.replace("Bosch ","")
+
+        config_entry.version = 3
         hass.config_entries.async_update_entry(config_entry, data=new)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)

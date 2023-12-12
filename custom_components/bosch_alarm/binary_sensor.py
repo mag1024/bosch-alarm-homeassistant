@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN
-from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,14 +69,14 @@ class PointSensor(PanelBinarySensor):
         return _guess_device_class(self.name.lower())
 
 class ConnectionStatusSensor(PanelBinarySensor):
-    def __init__(self, data, unique_id):
+    def __init__(self, connection, unique_id):
         PanelBinarySensor.__init__(
-                self, data.panel.connection_status_observer, unique_id,
-                device_info_from_panel(data))
-        self._panel = data.panel
+                self, connection.panel.connection_status_observer, unique_id,
+                connection.device_info())
+        self._panel = connection.panel
 
     @property
-    def name(self): return f"Connection Status"
+    def name(self): return "Connection Status"
 
     @property
     def is_on(self): return self._panel.connection_status()
@@ -89,16 +88,15 @@ class ConnectionStatusSensor(PanelBinarySensor):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up binary sensors for alarm points and the connection status."""
 
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    panel = data.panel
+    connection = hass.data[DOMAIN][config_entry.entry_id]
+    panel = connection.panel
 
     async_add_entities(
             [ConnectionStatusSensor(
-                data, f'{data.unique_id}_connection_status')])
+                connection, f'{connection.unique_id}_connection_status')])
     def setup():
-        device_info = device_info_from_panel(data)
         async_add_entities(
-                PointSensor(point, f'{data.unique_id}_point_{id}', device_info)
+                PointSensor(point, f'{connection.unique_id}_point_{id}', connection.device_info())
                     for (id, point) in panel.points.items())
 
-    data.register_entity_setup(setup)
+    connection.on_connect.append(setup)

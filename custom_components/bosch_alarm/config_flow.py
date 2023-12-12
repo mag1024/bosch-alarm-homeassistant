@@ -17,7 +17,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_PASSWORD,
-    CONF_CODE
+    CONF_CODE,
+    CONF_MODEL
 )
 
 from bosch_alarm_mode2 import Panel
@@ -92,10 +93,9 @@ async def try_connect(hass: HomeAssistant, data: dict[str, Any], load_selector: 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
-    VERSION = 2
+    VERSION = 3
     entry: config_entries.ConfigEntry | None = None
     data: dict[str, Any] | None = None
-    model: str | None = None
 
     @staticmethod
     @config_entries.callback
@@ -113,8 +113,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             # Use load_selector = 0 to fetch the panel model without authentication. 
             (model, _) = await try_connect(self.hass, user_input, 0)
-            self.model = model
             self.data = user_input
+            self.data[CONF_MODEL] = model
             return await self.async_step_auth()
         except RuntimeError as ex:
             _LOGGER.info(user_input)
@@ -127,9 +127,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the auth step."""
-        if "Solution" in self.model:
+        if "Solution" in self.data[CONF_MODEL]:
             schema = STEP_AUTH_DATA_SCHEMA_SOLUTION
-        elif "AMAX" in self.model:
+        elif "AMAX" in self.data[CONF_MODEL]:
             schema = STEP_AUTH_DATA_SCHEMA_AMAX
         else:
             schema = STEP_AUTH_DATA_SCHEMA_BG

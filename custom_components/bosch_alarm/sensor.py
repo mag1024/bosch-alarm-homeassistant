@@ -10,16 +10,13 @@ from homeassistant.const import EntityCategory
 
 from .const import DOMAIN, HISTORY_ATTR
 
-from .device import device_info_from_panel
-
 _LOGGER = logging.getLogger(__name__)
 
 class PanelSensor(SensorEntity):
-    def __init__(self, data, observer):
-        self._data = data
-        self._panel = data.panel
+    def __init__(self, connection, observer):
+        self._panel = connection.panel
         self._attr_has_entity_name = True
-        self._attr_device_info = device_info_from_panel(data)
+        self._attr_device_info = connection.device_info()
         self._observer = observer
 
     @property
@@ -32,15 +29,13 @@ class PanelSensor(SensorEntity):
         self._observer.detach(self.schedule_update_ha_state)
 
 class PanelHistorySensor(PanelSensor):
-    def __init__(self, data):
-        super().__init__(data, data.panel.history_observer)
+    def __init__(self, connection):
+        super().__init__(connection, connection.panel.history_observer)
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_unique_id = f'{connection.unique_id}_history'
 
     @property
     def icon(self): return "mdi:history"
-
-    @property
-    def unique_id(self): return f'{self._data.unique_id}_history'
 
     @property
     def state(self):
@@ -58,14 +53,12 @@ class PanelHistorySensor(PanelSensor):
         return { HISTORY_ATTR + f'_{e.date}': e.message for e in events }
 
 class PanelFaultsSensor(PanelSensor):
-    def __init__(self, data):
-        super().__init__(data, data.panel.faults_observer)
+    def __init__(self, connection):
+        super().__init__(connection, connection.panel.faults_observer)
+        self._attr_unique_id = f'{connection.unique_id}_faults'
 
     @property
     def icon(self): return "mdi:alert-circle"
-
-    @property
-    def unique_id(self): return f'{self._data.unique_id}_faults'
 
     @property
     def state(self):
@@ -78,6 +71,6 @@ class PanelFaultsSensor(PanelSensor):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for tracking panel history."""
 
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([PanelHistorySensor(data), PanelFaultsSensor(data)])
+    connection = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities([PanelHistorySensor(connection), PanelFaultsSensor(connection)])
 
