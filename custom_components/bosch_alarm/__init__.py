@@ -66,11 +66,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         if "Solution" in config_entry.title:
             new[CONF_USER_CODE] = new[CONF_PASSWORD]
             new.pop(CONF_PASSWORD)
-        dr = device_registry.async_get(hass)
 
     if config_entry.version < 3:
-        # Remove old devices using the panel model as an identifier
         model = config_entry.title.replace("Bosch ", "")
+        
+        # Remove old devices using the panel model as an identifier
+        dr = device_registry.async_get(hass)
         for device_entry in device_registry.async_entries_for_config_entry(dr, config_entry.entry_id):
             if (DOMAIN, model) in device_entry.identifiers:
                 dr.async_remove_device(device_entry.id)
