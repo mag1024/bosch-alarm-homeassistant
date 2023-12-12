@@ -11,12 +11,12 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 class PanelOutputEntity(SwitchEntity):
-    def __init__(self, id, output, connection):
+    def __init__(self, id, output, panel_conn):
         self._observer = output.status_observer
         self._attr_has_entity_name = True
-        self._attr_device_info = connection.device_info()
-        self._panel = connection.panel
-        self._attr_unique_id = f'{connection.unique_id}_output_{self._id}'
+        self._attr_device_info = panel_conn.device_info()
+        self._panel = panel_conn.panel
+        self._attr_unique_id = f'{panel_conn.unique_id}_output_{self._id}'
         self._id = id
         self._output = output
 
@@ -46,13 +46,13 @@ class PanelOutputEntity(SwitchEntity):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switch entities for outputs"""
 
-    connection = hass.data[DOMAIN][config_entry.entry_id]
-    panel = connection.panel
+    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel = panel_conn.panel
 
     def setup():
         async_add_entities(
-            PanelOutputEntity(id, output, connection)
+            PanelOutputEntity(id, output, panel_conn)
                 for (id, output) in panel.outputs.items())
 
-    connection.register_entity_setup(setup)
+    panel_conn.on_connect.append(setup)
 

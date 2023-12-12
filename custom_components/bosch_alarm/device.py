@@ -4,14 +4,14 @@ from .const import DOMAIN
 
 class PanelConnection:
     def __init__(self, panel, unique_id, model):
+        self.panel = panel
         self.unique_id = unique_id
         self.model = model
-        self.panel = panel
         self.on_connect = []
-        panel.connection_status_observer.attach(self.on_connection_status_change)
+        panel.panel_conn_status_observer.attach(self.on_panel_conn_status_change)
 
-    def on_connection_status_change(self):
-        if not self.panel.connection_status():
+    def on_panel_conn_status_change(self):
+        if not self.panel.panel_conn_status():
             return
         for on_connect_handler in self.on_connect:
             on_connect_handler()
@@ -27,5 +27,5 @@ class PanelConnection:
         )
 
     async def disconnect(self):
-        self.panel.connection_status_observer.detach(self.on_connection_status_change)
+        self.panel.panel_conn_status_observer.detach(self.on_panel_conn_status_change)
         await self.panel.disconnect()

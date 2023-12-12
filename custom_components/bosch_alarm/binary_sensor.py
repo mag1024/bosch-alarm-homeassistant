@@ -69,34 +69,34 @@ class PointSensor(PanelBinarySensor):
         return _guess_device_class(self.name.lower())
 
 class ConnectionStatusSensor(PanelBinarySensor):
-    def __init__(self, connection, unique_id):
+    def __init__(self, panel_conn, unique_id):
         PanelBinarySensor.__init__(
-                self, connection.panel.connection_status_observer, unique_id,
-                connection.device_info())
-        self._panel = connection.panel
+                self, panel_conn.panel.panel_conn_status_observer, unique_id,
+                panel_conn.device_info())
+        self._panel = panel_conn.panel
 
     @property
     def name(self): return "Connection Status"
 
     @property
-    def is_on(self): return self._panel.connection_status()
+    def is_on(self): return self._panel.panel_conn_status()
 
     @property
     def device_class(self): return BinarySensorDeviceClass.CONNECTIVITY
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up binary sensors for alarm points and the connection status."""
+    """Set up binary sensors for alarm points and the panel_conn status."""
 
-    connection = hass.data[DOMAIN][config_entry.entry_id]
-    panel = connection.panel
+    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel = panel_conn.panel
 
     async_add_entities(
             [ConnectionStatusSensor(
-                connection, f'{connection.unique_id}_connection_status')])
+                panel_conn, f'{panel_conn.unique_id}_panel_conn_status')])
     def setup():
         async_add_entities(
-                PointSensor(point, f'{connection.unique_id}_point_{id}', connection.device_info())
+                PointSensor(point, f'{panel_conn.unique_id}_point_{id}', panel_conn.device_info())
                     for (id, point) in panel.points.items())
 
-    connection.on_connect.append(setup)
+    panel_conn.on_connect.append(setup)

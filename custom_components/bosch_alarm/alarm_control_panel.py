@@ -37,14 +37,14 @@ SET_DATE_TIME_SCHEMA = make_entity_service_schema({
 })
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
-    def __init__(self, connection, arming_code, area_id, area, unique_id):
-        self._panel = connection.panel
+    def __init__(self, panel_conn, arming_code, area_id, area, unique_id):
+        self._panel = panel_conn.panel
         self._area_id = area_id
         self._area = area
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._arming_code = arming_code
         self._attr_has_entity_name = True
-        self._attr_device_info = connection.device_info()
+        self._attr_device_info = panel_conn.device_info()
 
     @property
     def code_format(self) -> alarm.CodeFormat | None:
@@ -54,8 +54,6 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         if self._arming_code.isnumeric():
             return alarm.CodeFormat.NUMBER
         return alarm.CodeFormat.TEXT
-    @property
-    def unique_id(self): return self._unique_id
 
     @property
     def should_poll(self): return False
@@ -118,17 +116,17 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
-    connection = hass.data[DOMAIN][config_entry.entry_id]
-    panel = connection.panel
+    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel = panel_conn.panel
 
     arming_code = config_entry.options.get(CONF_CODE, None)
 
     def setup():
         async_add_entities(
-            AreaAlarmControlPanel(connection, arming_code, id, area, f'{connection.unique_id}_area_{id}')
+            AreaAlarmControlPanel(panel_conn, arming_code, id, area, f'{panel_conn.unique_id}_area_{id}')
                 for (id, area) in panel.areas.items())
 
-    connection.on_connect.append(setup)
+    panel_conn.on_connect.append(setup)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SET_DATE_TIME_SERVICE_NAME, SET_DATE_TIME_SCHEMA, "set_panel_date")

@@ -38,22 +38,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If the panel doesn't expose it's serial number, use the entry id as a unique id instead.
     unique_id = entry.unique_id or entry.entry_id
 
-    data = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
+    panel_conn = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = data
-
-    # Remove old devices using the panel model as an identifier
-    dr = device_registry.async_get(hass)
-    for device_entry in device_registry.async_entries_for_config_entry(dr, entry.entry_id):
-        if (DOMAIN, data.model) in device_entry.identifiers:
-            dr.async_remove_device(device_entry.id)
+    hass.data[DOMAIN][entry.entry_id] = panel_conn
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
-    entry.async_create_background_task(hass, panel.connect(), "connection")
+    entry.async_create_background_task(hass, panel.connect(), "panel_conn")
     return True
 
 async def options_update_listener(
@@ -72,10 +66,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         if "Solution" in config_entry.title:
             new[CONF_USER_CODE] = new[CONF_PASSWORD]
             new.pop(CONF_PASSWORD)
+        dr = device_registry.async_get(hass)
 
     if config_entry.version < 3:
+        # Remove old devices using the panel model as an identifier
+        model = config_entry.title.replace("Bosch ", "")
+        for device_entry in device_registry.async_entries_for_config_entry(dr, config_entry.entry_id):
+            if (DOMAIN, model) in device_entry.identifiers:
+                dr.async_remove_device(device_entry.id)
+
         # The config flow sets the entries title to the panel's model
-        new[CONF_MODEL] = config_entry.title.replace("Bosch ","")
+        new[CONF_MODEL] = model
 
         config_entry.version = 3
         hass.config_entries.async_update_entry(config_entry, data=new)
