@@ -32,12 +32,9 @@ def _guess_device_class(name):
 class PanelBinarySensor(BinarySensorEntity):
     def __init__(self, observer, unique_id, device_info):
         self._observer = observer
-        self._unique_id = unique_id
-        self._attr_has_entity_name = True
+        self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-
-    @property
-    def unique_id(self): return self._unique_id
+        self._attr_has_entity_name = True
 
     @property
     def should_poll(self): return False
