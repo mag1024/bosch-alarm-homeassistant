@@ -39,10 +39,10 @@ SET_DATE_TIME_SCHEMA = make_entity_service_schema({
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
     def __init__(self, panel_conn, arming_code, area_id, area, unique_id):
         self._panel = panel_conn.panel
+        self._arming_code = arming_code
         self._area_id = area_id
         self._area = area
         self._attr_unique_id = unique_id
-        self._arming_code = arming_code
         self._attr_has_entity_name = True
         self._attr_device_info = panel_conn.device_info()
 

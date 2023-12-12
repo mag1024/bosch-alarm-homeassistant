@@ -12,13 +12,13 @@ _LOGGER = logging.getLogger(__name__)
 
 class PanelOutputEntity(SwitchEntity):
     def __init__(self, id, output, panel_conn):
+        self._id = id
+        self._output = output
+        self._panel = panel_conn.panel
         self._observer = output.status_observer
         self._attr_has_entity_name = True
         self._attr_device_info = panel_conn.device_info()
-        self._panel = panel_conn.panel
         self._attr_unique_id = f'{panel_conn.unique_id}_output_{self._id}'
-        self._id = id
-        self._output = output
 
     @property
     def should_poll(self): return False
