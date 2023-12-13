@@ -68,7 +68,7 @@ class PointSensor(PanelBinarySensor):
 class ConnectionStatusSensor(PanelBinarySensor):
     def __init__(self, panel_conn, unique_id):
         PanelBinarySensor.__init__(
-                self, panel_conn.panel.panel_conn_status_observer, unique_id,
+                self, panel_conn.panel.connection_status_observer, unique_id,
                 panel_conn.device_info())
         self._panel = panel_conn.panel
 
@@ -76,7 +76,7 @@ class ConnectionStatusSensor(PanelBinarySensor):
     def name(self): return "Connection Status"
 
     @property
-    def is_on(self): return self._panel.panel_conn_status()
+    def is_on(self): return self._panel.connection_status()
 
     @property
     def device_class(self): return BinarySensorDeviceClass.CONNECTIVITY
@@ -90,7 +90,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
             [ConnectionStatusSensor(
-                panel_conn, f'{panel_conn.unique_id}_panel_conn_status')])
+                panel_conn, f'{panel_conn.unique_id}_connection_status')])
     def setup():
         async_add_entities(
                 PointSensor(point, f'{panel_conn.unique_id}_point_{id}', panel_conn.device_info())

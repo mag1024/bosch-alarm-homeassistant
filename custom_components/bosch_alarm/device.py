@@ -8,10 +8,10 @@ class PanelConnection:
         self.unique_id = unique_id
         self.model = model
         self.on_connect = []
-        panel.panel_conn_status_observer.attach(self.on_panel_conn_status_change)
+        panel.connection_status_observer.attach(self._on_connection_status_change)
 
-    def on_panel_conn_status_change(self):
-        if not self.panel.panel_conn_status():
+    def _on_connection_status_change(self):
+        if not self.panel.connection_status():
             return
         for on_connect_handler in self.on_connect:
             on_connect_handler()
@@ -27,5 +27,5 @@ class PanelConnection:
         )
 
     async def disconnect(self):
-        self.panel.panel_conn_status_observer.detach(self.on_panel_conn_status_change)
+        self.panel.connection_status_observer.detach(self._on_connection_status_change)
         await self.panel.disconnect()
