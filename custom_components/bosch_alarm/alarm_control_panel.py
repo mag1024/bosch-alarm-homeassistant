@@ -20,7 +20,6 @@ import datetime
 from typing import Any
 
 from .const import DOMAIN
-from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,24 +37,23 @@ SET_DATE_TIME_SCHEMA = make_entity_service_schema({
 })
 
 class AreaAlarmControlPanel(AlarmControlPanelEntity):
-    def __init__(self, panel, arming_code, area_id, area, unique_id):
-        self._panel = panel
+    def __init__(self, panel_conn, arming_code, area_id, area, unique_id):
+        self._panel = panel_conn.panel
+        self._arming_code = arming_code
         self._area_id = area_id
         self._area = area
-        self._unique_id = unique_id
-        self._arming_code = arming_code
-        self._attr_device_info = device_info_from_panel(panel)
-    
+        self._attr_unique_id = unique_id
+        self._attr_has_entity_name = True
+        self._attr_device_info = panel_conn.device_info()
+
     @property
     def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
-        if self._arming_code is None: 
+        if self._arming_code is None:
             return None
         if self._arming_code.isnumeric():
             return alarm.CodeFormat.NUMBER
         return alarm.CodeFormat.TEXT
-    @property
-    def unique_id(self): return self._unique_id
 
     @property
     def should_poll(self): return False
@@ -79,18 +77,18 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
             AlarmControlPanelEntityFeature.ARM_HOME
             | AlarmControlPanelEntityFeature.ARM_AWAY
         )
-    
+
     def _arming_code_correct(self, code) -> bool:
         return code == self._arming_code
 
     async def async_alarm_disarm(self, code=None) -> None:
-        if self._arming_code_correct(code): 
+        if self._arming_code_correct(code):
             await self._panel.area_disarm(self._area_id)
     async def async_alarm_arm_home(self, code=None) -> None:
-        if self._arming_code_correct(code): 
+        if self._arming_code_correct(code):
             await self._panel.area_arm_part(self._area_id)
     async def async_alarm_arm_away(self, code=None) -> None:
-        if self._arming_code_correct(code): 
+        if self._arming_code_correct(code):
             await self._panel.area_arm_all(self._area_id)
 
     @property
@@ -118,12 +116,17 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up control panels for each area."""
-    panel = hass.data[DOMAIN][config_entry.entry_id]
+    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel = panel_conn.panel
 
     arming_code = config_entry.options.get(CONF_CODE, None)
-    async_add_entities(
-            AreaAlarmControlPanel(panel, arming_code, id, area, f'{panel.serial_number}_area_{id}')
+
+    def setup():
+        async_add_entities(
+            AreaAlarmControlPanel(panel_conn, arming_code, id, area, f'{panel_conn.unique_id}_area_{id}')
                 for (id, area) in panel.areas.items())
+
+    panel_conn.on_connect.append(setup)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SET_DATE_TIME_SERVICE_NAME, SET_DATE_TIME_SCHEMA, "set_panel_date")

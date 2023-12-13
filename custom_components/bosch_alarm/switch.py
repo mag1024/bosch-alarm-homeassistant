@@ -7,20 +7,18 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
-from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
 
 class PanelOutputEntity(SwitchEntity):
-    def __init__(self, id, output, device_info, panel):
-        self._observer = output.status_observer
-        self._attr_device_info = device_info
-        self._panel = panel
+    def __init__(self, id, output, panel_conn):
         self._id = id
         self._output = output
-
-    @property
-    def unique_id(self): return f'{self._panel.serial_number}_output_{self._id}'
+        self._panel = panel_conn.panel
+        self._observer = output.status_observer
+        self._attr_has_entity_name = True
+        self._attr_device_info = panel_conn.device_info()
+        self._attr_unique_id = f'{panel_conn.unique_id}_output_{self._id}'
 
     @property
     def should_poll(self): return False
@@ -34,7 +32,7 @@ class PanelOutputEntity(SwitchEntity):
     @property
     def is_on(self) -> bool:
         return self._output.is_active()
-    
+
     @property
     def name(self): return self._output.name
 
@@ -48,9 +46,13 @@ class PanelOutputEntity(SwitchEntity):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switch entities for outputs"""
 
-    panel = hass.data[DOMAIN][config_entry.entry_id]
-    device_info = device_info_from_panel(panel)
-    async_add_entities(
-            PanelOutputEntity(id, output, device_info, panel)
+    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel = panel_conn.panel
+
+    def setup():
+        async_add_entities(
+            PanelOutputEntity(id, output, panel_conn)
                 for (id, output) in panel.outputs.items())
+
+    panel_conn.on_connect.append(setup)
 

@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN
-from .device import device_info_from_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,11 +32,9 @@ def _guess_device_class(name):
 class PanelBinarySensor(BinarySensorEntity):
     def __init__(self, observer, unique_id, device_info):
         self._observer = observer
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-
-    @property
-    def unique_id(self): return self._unique_id
+        self._attr_has_entity_name = True
 
     @property
     def should_poll(self): return False
@@ -69,14 +66,14 @@ class PointSensor(PanelBinarySensor):
         return _guess_device_class(self.name.lower())
 
 class ConnectionStatusSensor(PanelBinarySensor):
-    def __init__(self, panel, unique_id):
+    def __init__(self, panel_conn, unique_id):
         PanelBinarySensor.__init__(
-                self, panel.connection_status_observer, unique_id,
-                device_info_from_panel(panel))
-        self._panel = panel
+                self, panel_conn.panel.connection_status_observer, unique_id,
+                panel_conn.device_info())
+        self._panel = panel_conn.panel
 
     @property
-    def name(self): return f"{self._panel.model} Connection Status"
+    def name(self): return "Connection Status"
 
     @property
     def is_on(self): return self._panel.connection_status()
@@ -88,12 +85,15 @@ class ConnectionStatusSensor(PanelBinarySensor):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up binary sensors for alarm points and the connection status."""
 
-    panel = hass.data[DOMAIN][config_entry.entry_id]
+    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel = panel_conn.panel
+
     async_add_entities(
             [ConnectionStatusSensor(
-                panel, f'{panel.serial_number}_connection_status')])
-    device_info = device_info_from_panel(panel)
-    async_add_entities(
-            PointSensor(point, f'{panel.serial_number}_point_{id}', device_info)
-                for (id, point) in panel.points.items())
+                panel_conn, f'{panel_conn.unique_id}_connection_status')])
+    def setup():
+        async_add_entities(
+                PointSensor(point, f'{panel_conn.unique_id}_point_{id}', panel_conn.device_info())
+                    for (id, point) in panel.points.items())
 
+    panel_conn.on_connect.append(setup)

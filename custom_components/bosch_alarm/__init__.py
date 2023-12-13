@@ -13,10 +13,13 @@ from homeassistant.helpers import device_registry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    CONF_PASSWORD
+    CONF_PASSWORD,
+    CONF_MODEL
 )
 
 import bosch_alarm_mode2
+
+from .device import PanelConnection
 
 from .const import DOMAIN, CONF_INSTALLER_CODE, CONF_USER_CODE
 
@@ -30,38 +33,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             host=entry.data[CONF_HOST], port=entry.data[CONF_PORT],
             automation_code=entry.data.get(CONF_PASSWORD, None),
             installer_or_user_code=entry.data.get(CONF_INSTALLER_CODE, entry.data.get(CONF_USER_CODE, None)))
-    try:
-        await panel.connect()
-    except asyncio.exceptions.TimeoutError:
-        _LOGGER.warning("Initial panel connection timed out...")
-    except:
-        logging.exception("Initial panel connection failed")
+
+    # The config flow sets the entries unique id to the serial number if available
+    # If the panel doesn't expose it's serial number, use the entry id as a unique id instead.
+    unique_id = entry.unique_id or entry.entry_id
+
+    panel_conn = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = panel
-
-    def setup():
-        # Some panels don't support retrieving a serial number.
-        # We still need some form of identifier, so fall back
-        # to the entry id.
-        if not panel.serial_number:
-            panel.serial_number = entry.entry_id
-
-        # Remove old devices using the panel model as an identifier
-        dr = device_registry.async_get(hass)
-        for device_entry in device_registry.async_entries_for_config_entry(dr, entry.entry_id):
-            if (DOMAIN, panel.model) in device_entry.identifiers:
-                dr.async_remove_device(device_entry.id)
-
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
-    if panel.connection_status():
-        setup()
-    else:
-        panel.connection_status_observer.attach(
-                lambda: panel.connection_status() and setup())
+    hass.data[DOMAIN][entry.entry_id] = panel_conn
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
+    entry.async_create_background_task(hass, panel.connect(), "panel_connection")
     return True
 
 async def options_update_listener(
@@ -73,15 +59,27 @@ async def options_update_listener(
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
+    new = {**config_entry.data}
     if config_entry.version == 1:
-        new = {**config_entry.data}
         # Solution panels previously put the user code in the password field
         # But now its in the user code field
         if "Solution" in config_entry.title:
             new[CONF_USER_CODE] = new[CONF_PASSWORD]
             new.pop(CONF_PASSWORD)
 
-        config_entry.version = 2
+    if config_entry.version < 3:
+        model = config_entry.title.replace("Bosch ", "")
+        
+        # Remove old devices using the panel model as an identifier
+        dr = device_registry.async_get(hass)
+        for device_entry in device_registry.async_entries_for_config_entry(dr, config_entry.entry_id):
+            if (DOMAIN, model) in device_entry.identifiers:
+                dr.async_remove_device(device_entry.id)
+
+        # The config flow sets the entries title to the panel's model
+        new[CONF_MODEL] = model
+
+        config_entry.version = 3
         hass.config_entries.async_update_entry(config_entry, data=new)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
