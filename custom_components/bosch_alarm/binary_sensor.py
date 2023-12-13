@@ -83,7 +83,7 @@ class ConnectionStatusSensor(PanelBinarySensor):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up binary sensors for alarm points and the panel_conn status."""
+    """Set up binary sensors for alarm points and the connection status."""
 
     panel_conn = hass.data[DOMAIN][config_entry.entry_id]
     panel = panel_conn.panel

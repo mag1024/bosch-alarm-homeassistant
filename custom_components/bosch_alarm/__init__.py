@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
-    entry.async_create_background_task(hass, panel.connect(), "panel_conn")
+    entry.async_create_background_task(hass, panel.connect(), "panel_connection")
     return True
 
 async def options_update_listener(
