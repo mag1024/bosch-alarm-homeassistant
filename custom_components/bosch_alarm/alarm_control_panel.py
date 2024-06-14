@@ -45,6 +45,7 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         self._attr_unique_id = unique_id
         self._attr_has_entity_name = True
         self._attr_device_info = panel_conn.device_info()
+        self._attr_code_arm_required = arming_code is not None
 
     @property
     def code_format(self) -> alarm.CodeFormat | None:
