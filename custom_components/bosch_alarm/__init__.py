@@ -24,7 +24,7 @@ from .device import PanelConnection
 from .const import DOMAIN, CONF_INSTALLER_CODE, CONF_USER_CODE
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SENSOR,
-                             Platform.SWITCH]
+                             Platform.SWITCH, Platform.LOCK]
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
