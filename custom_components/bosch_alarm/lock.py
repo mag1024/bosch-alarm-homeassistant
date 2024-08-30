@@ -47,13 +47,13 @@ class PanelLockEntity(LockEntity):
         return False
 
     async def async_lock(self):
-        await self._panel.relock_door(self._door_id)
+        await self._panel.door_relock(self._door_id)
 
     async def async_unlock(self):
-        await self._panel.unlock_door(self._door_id)
+        await self._panel.door_unlock(self._door_id)
 
     async def async_open(self):
-        await self._panel.cycle_door(self._door_id)
+        await self._panel.door_cycle(self._door_id)
 
     async def async_added_to_hass(self):
         self._observer.attach(self.schedule_update_ha_state)
