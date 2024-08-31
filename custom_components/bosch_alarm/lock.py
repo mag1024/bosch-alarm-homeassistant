@@ -1,4 +1,4 @@
-"""Support for Bosch Alarm Panel points as binary sensors"""
+"""Support for Bosch Alarm Panel doors as locks"""
 
 from __future__ import annotations
 
