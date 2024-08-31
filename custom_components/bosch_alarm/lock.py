@@ -6,8 +6,7 @@ import logging
 import re
 
 from homeassistant.components.lock import (
-    LockEntityFeature,
-    LockEntity,
+    LockEntity
 )
 
 from .const import DOMAIN
@@ -24,7 +23,6 @@ class PanelLockEntity(LockEntity):
         self._attr_has_entity_name = True
         self._door = door
         self._door_id = id
-        self._attr_supported_features = LockEntityFeature.OPEN
 
     @property
     def name(self):
@@ -52,9 +50,6 @@ class PanelLockEntity(LockEntity):
     async def async_unlock(self):
         await self._panel.door_unlock(self._door_id)
 
-    async def async_open(self):
-        await self._panel.door_cycle(self._door_id)
-
     async def async_added_to_hass(self):
         self._observer.attach(self.schedule_update_ha_state)
 
@@ -63,7 +58,7 @@ class PanelLockEntity(LockEntity):
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up binary sensors for alarm points and the connection status."""
+    """Set up lock entities for each door"""
 
     panel_conn = hass.data[DOMAIN][config_entry.entry_id]
     panel = panel_conn.panel
