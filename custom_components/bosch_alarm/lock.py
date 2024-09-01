@@ -29,10 +29,6 @@ class PanelLockEntity(LockEntity):
         return self._door.name
 
     @property
-    def is_open(self):
-        return self._door.is_open()
-
-    @property
     def is_locked(self):
         return self._door.is_locked()
 
