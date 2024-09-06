@@ -19,7 +19,7 @@ Based on the [bosch-alarm-mode2](https://github.com/mag1024/bosch-alarm-mode2) l
 - [Sensor](https://developers.home-assistant.io/docs/core/entity/sensor/) entities for the panel's current faults, and the panel's history.
   The history itself is stored on a `history` attribute, as there is a limit to how much text a sensor can store in its state.
 - [Switch](https://developers.home-assistant.io/docs/core/entity/switch) for each configured output. Note that for some panels, only outputs with the type set to "remote output" can be controlled via _Mode 2_ API.
-- [Lock](https://developers.home-assistant.io/docs/core/entity/lock) for each configured "door" (_Solution 4000_ only).
+- [Lock](https://developers.home-assistant.io/docs/core/entity/lock) for each configured "door" (_Solution 4000, B4512, B5512, B8512G, B9512G_ only).
 - A custom Service, called `set_date_time`, that can be used to set the time and date on the panel.
 
 ### Installation
