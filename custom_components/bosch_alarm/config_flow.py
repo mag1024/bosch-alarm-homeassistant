@@ -1,39 +1,35 @@
 """Config flow for Bosch Alarm integration."""
+
 from __future__ import annotations
 
+import asyncio
 import logging
 import ssl
-import asyncio
 from typing import Any
 
+from bosch_alarm_mode2 import Panel
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_PASSWORD,
-    CONF_CODE,
-    CONF_MODEL
-)
+from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
 
-from bosch_alarm_mode2 import Panel
-
-from .const import (
-    DOMAIN,
-    CONF_INSTALLER_CODE,
-    CONF_USER_CODE
-)
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=7700): cv.positive_int
+        vol.Required(CONF_PORT, default=7700): cv.positive_int,
     }
 )
 
@@ -56,34 +52,39 @@ STEP_AUTH_DATA_SCHEMA_BG = vol.Schema(
     }
 )
 
-STEP_INIT_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(
-            CONF_CODE
-        ): str
-    }
-)
+STEP_INIT_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_CODE): str})
 
-async def try_connect(hass: HomeAssistant, data: dict[str, Any], load_selector: int=0):
+
+async def try_connect(
+    hass: HomeAssistant, data: dict[str, Any], load_selector: int = 0
+):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    panel = Panel(host=data[CONF_HOST], port=data[CONF_PORT],
-                  automation_code=data.get(CONF_PASSWORD, None), 
-                  installer_or_user_code=data.get(CONF_INSTALLER_CODE, data.get(CONF_USER_CODE, None)))
+    panel = Panel(
+        host=data[CONF_HOST],
+        port=data[CONF_PORT],
+        automation_code=data.get(CONF_PASSWORD),
+        installer_or_user_code=data.get(CONF_INSTALLER_CODE, data.get(CONF_USER_CODE)),
+    )
 
     try:
         await panel.connect(load_selector)
     except (PermissionError, ValueError) as err:
-        _LOGGER.exception(err)
-        raise RuntimeError("invalid_auth")
-    except (OSError, ConnectionRefusedError, ssl.SSLError, asyncio.exceptions.TimeoutError) as err:
-        _LOGGER.exception(err)
-        raise RuntimeError("cannot_connect")
+        _LOGGER.exception("Authentication Error")
+        raise RuntimeError("invalid_auth") from err
+    except (
+        OSError,
+        ConnectionRefusedError,
+        ssl.SSLError,
+        asyncio.exceptions.TimeoutError,
+    ) as err:
+        _LOGGER.exception("Connection Error")
+        raise RuntimeError("cannot_connect") from err
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception(err)
-        raise RuntimeError("unknown")
+        _LOGGER.exception("Unknown Error")
+        raise RuntimeError("unknown") from err
     finally:
         await panel.disconnect()
 
@@ -99,19 +100,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @config_entries.callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Provide a handler for the options flow."""
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         try:
-            # Use load_selector = 0 to fetch the panel model without authentication. 
+            # Use load_selector = 0 to fetch the panel model without authentication.
             (model, _) = await try_connect(self.hass, user_input, 0)
             self.data = user_input
             self.data[CONF_MODEL] = model
@@ -119,13 +121,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except RuntimeError as ex:
             _LOGGER.info(user_input)
             return self.async_show_form(
-                step_id="user", data_schema=self.add_suggested_values_to_schema(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
                     STEP_USER_DATA_SCHEMA, user_input
-                ), errors={"base": ex.args}
+                ),
+                errors={"base": ex.args[0]},
             )
+
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the auth step."""
         if "Solution" in self.data[CONF_MODEL]:
             schema = STEP_AUTH_DATA_SCHEMA_SOLUTION
@@ -135,30 +140,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             schema = STEP_AUTH_DATA_SCHEMA_BG
 
         if user_input is None:
-            return self.async_show_form(
-                step_id="auth", data_schema=schema
-            )
+            return self.async_show_form(step_id="auth", data_schema=schema)
         self.data.update(user_input)
         try:
-            (model, serial_number) = await try_connect(self.hass, self.data, Panel.LOAD_EXTENDED_INFO)
+            (model, serial_number) = await try_connect(
+                self.hass, self.data, Panel.LOAD_EXTENDED_INFO
+            )
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="Bosch %s" % model, data=self.data)
+            return self.async_create_entry(title=f"Bosch {model}", data=self.data)
         except RuntimeError as ex:
             return self.async_show_form(
-                step_id="auth", data_schema=self.add_suggested_values_to_schema(
-                    schema, user_input
-                ), errors={"base": ex.args}
+                step_id="auth",
+                data_schema=self.add_suggested_values_to_schema(schema, user_input),
+                errors={"base": ex.args[0]},
             )
 
+
 class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a options flow for Bosch Alarm."""
+
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -167,5 +175,5 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_INIT_DATA_SCHEMA, self.config_entry.options
-            )
+            ),
         )
