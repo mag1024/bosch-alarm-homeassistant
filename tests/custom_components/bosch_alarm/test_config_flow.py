@@ -1,27 +1,25 @@
 """Tests for the bosch_alarm config flow."""
 
-from unittest.mock import MagicMock, patch
+import asyncio
+from unittest.mock import patch
 
 import pytest
-import asyncio
 
 from homeassistant import config_entries
+from homeassistant.components.bosch_alarm.const import (
+    CONF_INSTALLER_CODE,
+    CONF_USER_CODE,
+    DOMAIN,
+)
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_PASSWORD,
     CONF_CODE,
+    CONF_HOST,
     CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.components.bosch_alarm.const import (
-    DOMAIN,
-    CONF_INSTALLER_CODE,
-    CONF_USER_CODE,
-)
-
-from bosch_alarm_mode2 import Panel
 
 from tests.common import MockConfigEntry
 
@@ -35,7 +33,7 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_form_user(hass: HomeAssistant, model: str, config: dict) -> None:
-    """Test we get the form."""
+    """Test the config flow for bosch_alarm."""
 
     async def connect(self, load_selector):
         self.model = model
@@ -84,7 +82,7 @@ async def test_form_user(hass: HomeAssistant, model: str, config: dict) -> None:
 async def test_form_exceptions(
     hass: HomeAssistant, exception: Exception, message: str
 ) -> None:
-    """Test we get the form."""
+    """Test we handle exceptions correctly."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -105,7 +103,7 @@ async def test_form_exceptions(
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test the options flow for SkyConnect."""
+    """Test the options flow for bosch_alarm."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
