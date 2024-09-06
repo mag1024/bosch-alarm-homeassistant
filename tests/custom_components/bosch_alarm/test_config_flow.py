@@ -26,11 +26,19 @@ from bosch_alarm_mode2 import Panel
 from tests.common import MockConfigEntry
 
 
-async def test_form_user_solution(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("model", "config"),
+    [
+        ("Solution 3000", {CONF_USER_CODE: "1234"}),
+        ("AMAX 3000", {CONF_INSTALLER_CODE: "1234", CONF_PASSWORD: "1234567890"}),
+        ("B5512 (US1B)", {CONF_PASSWORD: "1234567890"}),
+    ],
+)
+async def test_form_user(hass: HomeAssistant, model: str, config: dict) -> None:
     """Test we get the form."""
 
     async def connect(self, load_selector):
-        self.model = "Solution 3000"
+        self.model = model
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -54,100 +62,28 @@ async def test_form_user_solution(hass: HomeAssistant) -> None:
         assert result["errors"] is None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USER_CODE: "1234"},
+            config,
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Bosch Solution 3000"
+        assert result["title"] == f"Bosch {model}"
         assert result["data"] == {
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 7700,
-            CONF_USER_CODE: "1234",
-            CONF_MODEL: "Solution 3000",
+            CONF_MODEL: model,
+            **config,
         }
 
 
-async def test_form_user_amax(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-
-    async def connect(self, load_selector):
-        self.model = "AMAX 3000"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] is None
-    with (
-        patch("bosch_alarm_mode2.panel.Panel.connect", connect),
-        patch(
-            "homeassistant.components.bosch_alarm.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "auth"
-        assert result["errors"] is None
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_INSTALLER_CODE: "1234", CONF_PASSWORD: "1234567890"},
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Bosch AMAX 3000"
-        assert result["data"] == {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 7700,
-            CONF_INSTALLER_CODE: "1234",
-            CONF_PASSWORD: "1234567890",
-            CONF_MODEL: "AMAX 3000",
-        }
-
-
-async def test_form_user_bg(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-
-    async def connect(self, load_selector):
-        self.model = "B5512 (US1B)"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] is None
-    with (
-        patch("bosch_alarm_mode2.panel.Panel.connect", connect),
-        patch(
-            "homeassistant.components.bosch_alarm.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "auth"
-        assert result["errors"] is None
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "1234567890"},
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Bosch B5512 (US1B)"
-        assert result["data"] == {
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 7700,
-            CONF_PASSWORD: "1234567890",
-            CONF_MODEL: "B5512 (US1B)",
-        }
-
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("exception", "message"),
+    [
+        (PermissionError(), "invalid_auth"),
+        (asyncio.exceptions.TimeoutError(), "cannot_connect"),
+    ],
+)
+async def test_form_exceptions(
+    hass: HomeAssistant, exception: Exception, message: str
+) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -157,7 +93,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] is None
     with (
-        patch("bosch_alarm_mode2.panel.Panel.connect", side_effect=PermissionError()),
+        patch("bosch_alarm_mode2.panel.Panel.connect", side_effect=exception),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -165,31 +101,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cant_connect(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] is None
-    with (
-        patch(
-            "bosch_alarm_mode2.panel.Panel.connect",
-            side_effect=asyncio.exceptions.TimeoutError(),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"base": message}
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -217,7 +129,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    # First step is confirmation
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
