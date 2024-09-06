@@ -2,8 +2,12 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
+
 class PanelConnection:
-    def __init__(self, panel, unique_id, model):
+    """Collate information about a given alarm panel."""
+
+    def __init__(self, panel, unique_id, model) -> None:
+        """Collate information about a given alarm panel."""
         self.panel = panel
         self.unique_id = unique_id
         self.model = model
@@ -18,6 +22,7 @@ class PanelConnection:
         self.on_connect.clear()
 
     def device_info(self):
+        """Format the alarm panel information as a DeviceInfo."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=f"Bosch {self.model}",
@@ -27,5 +32,6 @@ class PanelConnection:
         )
 
     async def disconnect(self):
+        """Stop observing connection status changes."""
         self.panel.connection_status_observer.detach(self._on_connection_status_change)
         await self.panel.disconnect()
