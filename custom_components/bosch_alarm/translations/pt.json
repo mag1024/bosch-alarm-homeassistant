@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "O dispositivo já está configurado",
+      "reauth_successful": "Dispositivo reconfigurado com sucesso"
+    },
+    "error": {
+      "cannot_connect": "Falha ao ligar",
+      "invalid_auth": "Autenticação inválida",
+      "unknown": "Erro inesperado"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Porta"
+        }
+      },
+      "auth": {
+        "data": {
+          "password": "Código de automação",
+          "installer_code": "Código do instalador",
+          "user_code": "Código do utilizador"
+        },
+        "data_description": {
+          "password": "O Código de Automação é necessário para aceder a todos os painéis que utilizam o protocolo Modo 2. Pode ser configurado via A-Link Plus ou o Software de Programação Remota (RPS). Deve ser definido como uma string de pelo menos 10 caracteres.",
+          "installer_code": "O Código do Instalador é utilizado para aceder à interface de configuração. Normalmente, é um PIN numérico de 4 dígitos.",
+          "user_code": "O Código do Utilizador é o código utilizado para ativar o painel. Normalmente, é um PIN numérico de 4 dígitos."
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "unknown": "Erro inesperado"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "code": "Código de ativação"
+        },
+        "data_description": {
+          "code": "O código de ativação é utilizado para proteger as operações de ativar/desativar localmente dentro do Home Assistant. Não tem de coincidir com nenhum dos códigos configurados no painel."
+        }
+      }
+    }
+  },
+  "services": {
+    "set_date_time": {
+      "name": "Definir data e hora do painel",
+      "description": "Definir a data e hora do painel"
+    }
+  }
+}
