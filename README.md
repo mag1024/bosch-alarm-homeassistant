@@ -4,10 +4,10 @@
 
 Supported panels:
  * _Solution 2000/3000/4000_
- * _B4512/B5512_
- * _B8512G/B9512G_
+ * B-Series: _B3512/B4512/B5512/B6512_
+ * G-Series: _B8512G/B9512G_
  * _AMAX 2100/3000/4000_
- * _D7412GV4/D9412GV4_.
+ * _D7412GV4/D9412GV4_ (firmware 2.0+)
 
 Based on the [bosch-alarm-mode2](https://github.com/mag1024/bosch-alarm-mode2) library, which uses subscriptions/push updates for panels that support it.
 
