@@ -45,6 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If the panel doesn't expose it's serial number, use the entry id as a unique id instead.
     unique_id = entry.unique_id or entry.entry_id
 
+    unique_id = str(unique_id)
+
     panel_conn = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
 
     hass.data.setdefault(DOMAIN, {})
@@ -91,7 +93,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version < 4:
         # Migrate unique id from integer to string
-        hass.config_entries.async_update_entry(config_entry, data=new, unique_id=str(config_entry.unique_id), version=4)
+        hass.config_entries.async_update_entry(config_entry, data=new, unique_id=config_entry.unique_id and str(config_entry.unique_id), version=4)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
