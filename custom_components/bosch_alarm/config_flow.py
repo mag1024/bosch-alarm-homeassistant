@@ -94,7 +94,7 @@ async def try_connect(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
-    VERSION = 3
+    VERSION = 4
     entry: config_entries.ConfigEntry | None = None
     data: dict[str, Any] | None = None
 
