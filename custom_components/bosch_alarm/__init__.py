@@ -91,8 +91,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version < 4:
         # Migrate unique id from integer to string
-        config_entry.version = 4
-        hass.config_entries.async_update_entry(config_entry, data=new, unique_id=str(config_entry.unique_id))
+        hass.config_entries.async_update_entry(config_entry, data=new, unique_id=str(config_entry.unique_id), version=4)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
