@@ -45,8 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If the panel doesn't expose it's serial number, use the entry id as a unique id instead.
     unique_id = entry.unique_id or entry.entry_id
 
-    unique_id = str(unique_id)
-
     panel_conn = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
 
     hass.data.setdefault(DOMAIN, {})
