@@ -146,7 +146,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             (model, serial_number) = await try_connect(
                 self.hass, self.data, Panel.LOAD_EXTENDED_INFO
             )
-            await self.async_set_unique_id(serial_number)
+            await self.async_set_unique_id(str(serial_number))
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=f"Bosch {model}", data=self.data)
         except RuntimeError as ex:
