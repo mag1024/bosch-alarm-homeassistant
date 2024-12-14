@@ -13,6 +13,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE
@@ -73,20 +74,20 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
         return self._area.name
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
         if self._area.is_triggered():
-            return "triggered"
+            return AlarmControlPanelState.TRIGGERED
         if self._area.is_disarmed():
-            return "disarmed"
+            return AlarmControlPanelState.DISARMED
         if self._area.is_arming():
-            return "arming"
+            return AlarmControlPanelState.ARMING
         if self._area.is_pending():
-            return "pending"
+            return AlarmControlPanelState.PENDING
         if self._area.is_part_armed():
-            return "armed_home"
+            return AlarmControlPanelState.ARMED_HOME
         if self._area.is_all_armed():
-            return "armed_away"
+            return AlarmControlPanelState.ARMED_AWAY
         return None
 
     def _arming_code_correct(self, code) -> bool:
