@@ -89,9 +89,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # The config flow sets the entries title to the panel's model
         new[CONF_MODEL] = model
 
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=new)
-
     if config_entry.version < 4:
         # Migrate unique id from integer to string
         config_entry.version = 4
