@@ -1,4 +1,8 @@
-from homeassistant.helpers.entity import DeviceInfo
+"""Support for connections to a Bosch Alarm Panel."""
+
+from collections.abc import Callable
+
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
 
@@ -11,7 +15,7 @@ class PanelConnection:
         self.panel = panel
         self.unique_id = unique_id
         self.model = model
-        self.on_connect = []
+        self.on_connect: list[Callable] = []
         panel.connection_status_observer.attach(self._on_connection_status_change)
 
     def _on_connection_status_change(self):

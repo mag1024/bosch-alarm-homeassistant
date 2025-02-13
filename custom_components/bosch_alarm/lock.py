@@ -8,9 +8,7 @@ from typing import Any
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from .const import DOMAIN
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,17 +62,14 @@ class PanelLockEntity(LockEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lock entities for each door."""
 
-    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel_conn = config_entry.runtime_data
     panel = panel_conn.panel
 
-    def setup():
-        async_add_entities(
-            PanelLockEntity(lock_id, panel_conn, door)
-            for (lock_id, door) in panel.doors.items()
-        )
-
-    panel_conn.on_connect.append(setup)
+    async_add_entities(
+        PanelLockEntity(lock_id, panel_conn, door)
+        for (lock_id, door) in panel.doors.items()
+    )

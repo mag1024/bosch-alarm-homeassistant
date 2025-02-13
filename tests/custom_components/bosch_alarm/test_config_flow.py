@@ -102,6 +102,28 @@ async def test_form_exceptions(
         assert result["errors"] == {"base": message}
 
 
+async def test_entry_already_configured(hass: HomeAssistant) -> None:
+    """Test if configuring an entity twice results in an error."""
+
+    entry = MockConfigEntry(
+        domain="bosch_alarm", unique_id="unique_id", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("bosch_alarm_mode2.panel.Panel.connect"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "0.0.0.0"},
+        )
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
+
+
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test the options flow for bosch_alarm."""
     config_entry = MockConfigEntry(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 
@@ -13,7 +13,7 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    AlarmControlPanelState
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE
@@ -21,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.util import dt as dt_util
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,34 +135,31 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
 
     async def set_panel_date(self, **kwargs: Any) -> None:
         """Set the date and time on a bosch alarm panel."""
-        value: datetime = kwargs.get(DATETIME_ATTR, dt_util.now())
+        value: dt.datetime = kwargs.get(DATETIME_ATTR, dt_util.now())
         await self._panel.set_panel_date(value)
 
 
 async def async_setup_entry(
     hass: HomeAssistant | None,
     config_entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up control panels for each area."""
-    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel_conn = config_entry.runtime_data
     panel = panel_conn.panel
 
     arming_code = config_entry.options.get(CONF_CODE, None)
 
-    def setup():
-        async_add_entities(
-            AreaAlarmControlPanel(
-                panel_conn,
-                arming_code,
-                area_id,
-                area,
-                f"{panel_conn.unique_id}_area_{area_id}",
-            )
-            for (area_id, area) in panel.areas.items()
+    async_add_entities(
+        AreaAlarmControlPanel(
+            panel_conn,
+            arming_code,
+            area_id,
+            area,
+            f"{panel_conn.unique_id}_area_{area_id}",
         )
-
-    panel_conn.on_connect.append(setup)
+        for (area_id, area) in panel.areas.items()
+    )
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

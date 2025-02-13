@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import ssl
 
 import bosch_alarm_mode2
 
@@ -15,6 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
@@ -46,16 +49,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unique_id = entry.unique_id or entry.entry_id
 
     panel_conn = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = panel_conn
+    entry.runtime_data = panel_conn
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
+
+    try:
+        await panel.connect()
+    except (PermissionError, ValueError) as err:
+        await panel.disconnect()
+        raise ConfigEntryAuthFailed from err
+    except (
+        OSError,
+        ConnectionRefusedError,
+        ssl.SSLError,
+        asyncio.exceptions.TimeoutError,
+    ) as err:
+        await panel.disconnect()
+        raise ConfigEntryNotReady("Device is offline") from err
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     )
-    entry.async_create_background_task(hass, panel.connect(), "panel_connection")
     return True
 
 
@@ -91,7 +105,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version < 4:
         # Migrate unique id from integer to string
-        hass.config_entries.async_update_entry(config_entry, data=new, unique_id=config_entry.unique_id and str(config_entry.unique_id), version=4)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=new,
+            unique_id=config_entry.unique_id and str(config_entry.unique_id),
+            version=4,
+        )
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
@@ -100,8 +119,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    panel = entry.runtime_data
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.data[DOMAIN][entry.entry_id].disconnect()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        await panel.disconnect()
 
     return unload_ok
