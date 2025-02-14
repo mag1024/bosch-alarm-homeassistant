@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         asyncio.exceptions.TimeoutError,
     ) as err:
         await panel.disconnect()
-        raise ConfigEntryNotReady("Device is offline") from err
+        raise ConfigEntryNotReady("Connection failed") from err
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
