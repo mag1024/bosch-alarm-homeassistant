@@ -1,4 +1,4 @@
-"""Support for Bosch Alarm Panel History as a sensor"""
+"""Support for Bosch Alarm Panel History as a sensor."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, HISTORY_ATTR
+from .const import HISTORY_ATTR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class PanelHistorySensor(PanelSensor):
         return "mdi:history"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """The state for this history entity."""
         events = self._panel.events
         if events:
@@ -85,7 +85,7 @@ class PanelFaultsSensor(PanelSensor):
         return "mdi:alert-circle"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """The state of this faults entity."""
         faults = self._panel.panel_faults
         return "\n".join(faults) if faults else "No faults"
@@ -99,9 +99,9 @@ class PanelFaultsSensor(PanelSensor):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a sensor for tracking panel history."""
 
-    panel_conn = hass.data[DOMAIN][config_entry.entry_id]
+    panel_conn = config_entry.runtime_data
     async_add_entities([PanelHistorySensor(panel_conn), PanelFaultsSensor(panel_conn)])

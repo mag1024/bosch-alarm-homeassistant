@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
@@ -96,13 +96,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 4
     entry: config_entries.ConfigEntry | None = None
-    data: dict[str, Any] | None = None
+    data: dict[str, Any] = {}
 
     @staticmethod
-    @config_entries.callback
+    @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Provide a handler for the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -112,6 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
         try:
             # Use load_selector = 0 to fetch the panel model without authentication.
             (model, _) = await try_connect(self.hass, user_input, 0)
