@@ -166,7 +166,10 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
             if entry.data[CONF_HOST] == discovery_info.ip:
-                if not entry.data.get(CONF_MAC):
+                if (
+                    not entry.data.get(CONF_MAC)
+                    and entry.state == ConfigEntryState.LOADED
+                ):
                     result = self.hass.config_entries.async_update_entry(
                         entry,
                         data={
