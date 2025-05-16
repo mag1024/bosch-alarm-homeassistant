@@ -87,7 +87,7 @@ async def try_connect(
 
 class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
-
+    VERSION = 4
     def __init__(self) -> None:
         """Init config flow."""
 
