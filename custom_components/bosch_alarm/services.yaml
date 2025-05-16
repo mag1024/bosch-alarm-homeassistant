@@ -1,13 +1,12 @@
 set_date_time:
-  target:
-    entity:
-      integration: bosch_alarm
-      domain: alarm_control_panel
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: bosch_alarm
     datetime:
-      name: Date & Time to set
-      description: The date/time to set. The time zone of the Home Assistant instance is assumed. Defaults to current date/time if unset.
       required: false
-      example: "2022/11/01 22:15"
+      example: "2025-05-10 00:00:00"
       selector:
         datetime:
