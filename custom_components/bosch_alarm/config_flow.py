@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
 )
