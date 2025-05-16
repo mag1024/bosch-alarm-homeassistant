@@ -149,39 +149,8 @@
         "cannot_connect": {
             "message": "Could not connect to panel."
         },
-        "connection_error": {
-            "message": "Could not connect to \"{target}\"."
-        },
         "incorrect_door_state": {
             "message": "Door cannot be manipulated while it is momentarily unlocked."
-        },
-        "incorrect_year": {
-            "message": "Bosch alarm panels only support years between 2010 and 2037."
-        },
-        "integration_not_found": {
-            "message": "Integration \"{target}\" not found in registry."
-        },
-        "not_loaded": {
-            "message": "{target} is not loaded."
-        },
-        "unknown_error": {
-            "message": "An unknown error occurred while setting the date and time on \"{target}\"."
-        }
-    },
-    "services": {
-        "set_date_time": {
-            "description": "Set the date and time on the panel",
-            "fields": {
-                "config_entry_id": {
-                    "description": "The Bosch Alarm integration ID.",
-                    "name": "Bosch Alarm config entry"
-                },
-                "datetime": {
-                    "description": "The date and time to set. The time zone of the Home Assistant instance is assumed. Defaults to current date and time if unset.",
-                    "name": "Date and time to set"
-                }
-            },
-            "name": "Set the date and time on the panel"
         }
     }
 }
