@@ -1,18 +1,17 @@
 {
   "domain": "bosch_alarm",
   "name": "Bosch Alarm",
-  "codeowners": [
-    "@mag1024",
-    "@sanjay900"
-  ],
+  "codeowners": ["@mag1024", "@sanjay900"],
   "config_flow": true,
-  "dependencies": [],
+  "dhcp": [
+    {
+      "macaddress": "000463*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
-  "homekit": {},
+  "integration_type": "device",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/mag1024/bosch-alarm-homeassistant/issues",
-  "requirements": ["bosch-alarm-mode2==0.4.1"],
-  "ssdp": [],
-  "version": "1.2.4",
-  "zeroconf": []
+  "quality_scale": "platinum",
+  "requirements": ["bosch-alarm-mode2==0.4.6"],
+  "version": "1.2.5"
 }

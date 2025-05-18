@@ -2,106 +2,121 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-import logging
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from bosch_alarm_mode2 import Panel
+from bosch_alarm_mode2.const import ALARM_MEMORY_PRIORITIES
+from bosch_alarm_mode2.panel import Area
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import HISTORY_ATTR
+from . import BoschAlarmConfigEntry
+from .entity import BoschAlarmAreaEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-
-class PanelSensor(SensorEntity):
-    """A sensor entity for a bosch alarm panel."""
-
-    def __init__(self, panel_conn, observer) -> None:
-        """Set up a sensor entity for a bosch alarm panel."""
-        self._panel = panel_conn.panel
-        self._attr_has_entity_name = True
-        self._attr_device_info = panel_conn.device_info()
-        self._attr_should_poll = False
-        self._observer = observer
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        self._observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self._observer.detach(self.schedule_update_ha_state)
+ALARM_TYPES = {
+    "burglary": {
+        ALARM_MEMORY_PRIORITIES.BURGLARY_SUPERVISORY: "supervisory",
+        ALARM_MEMORY_PRIORITIES.BURGLARY_TROUBLE: "trouble",
+        ALARM_MEMORY_PRIORITIES.BURGLARY_ALARM: "alarm",
+    },
+    "gas": {
+        ALARM_MEMORY_PRIORITIES.GAS_SUPERVISORY: "supervisory",
+        ALARM_MEMORY_PRIORITIES.GAS_TROUBLE: "trouble",
+        ALARM_MEMORY_PRIORITIES.GAS_ALARM: "alarm",
+    },
+    "fire": {
+        ALARM_MEMORY_PRIORITIES.FIRE_SUPERVISORY: "supervisory",
+        ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE: "trouble",
+        ALARM_MEMORY_PRIORITIES.FIRE_ALARM: "alarm",
+    },
+}
 
 
-class PanelHistorySensor(PanelSensor):
-    """A history sensor entity for a bosch alarm panel."""
+@dataclass(kw_only=True, frozen=True)
+class BoschAlarmSensorEntityDescription(SensorEntityDescription):
+    """Describes Bosch Alarm sensor entity."""
 
-    def __init__(self, panel_conn) -> None:
-        """Set up a history sensor entity for a bosch alarm panel."""
-        super().__init__(panel_conn, panel_conn.panel.history_observer)
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_unique_id = f"{panel_conn.unique_id}_history"
-
-    @property
-    def icon(self) -> str | None:
-        """The icon for this history entity."""
-        return "mdi:history"
-
-    @property
-    def native_value(self) -> str:
-        """The state for this history entity."""
-        events = self._panel.events
-        if events:
-            return str(events[-1])
-        return "No events"
-
-    @property
-    def name(self) -> str:
-        """The name for this history entity."""
-        return "History"
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """The extra state attributes for this history entity."""
-        events = self._panel.events
-        return {HISTORY_ATTR + f"_{e.date}": e.message for e in events}
+    value_fn: Callable[[Area], str | int]
+    observe_alarms: bool = False
+    observe_ready: bool = False
+    observe_status: bool = False
 
 
-class PanelFaultsSensor(PanelSensor):
-    """A faults sensor entity for a bosch alarm panel."""
+def priority_value_fn(priority_info: dict[int, str]) -> Callable[[Area], str]:
+    """Build a value_fn for a given priority type."""
+    return lambda area: next(
+        (key for priority, key in priority_info.items() if priority in area.alarms_ids),
+        "no_issues",
+    )
 
-    def __init__(self, panel_conn) -> None:
-        """Set up a faults sensor entity for a bosch alarm panel."""
-        super().__init__(panel_conn, panel_conn.panel.faults_observer)
-        self._attr_unique_id = f"{panel_conn.unique_id}_faults"
 
-    @property
-    def icon(self) -> str:
-        """The icon for this faults entity."""
-        return "mdi:alert-circle"
-
-    @property
-    def native_value(self) -> str:
-        """The state of this faults entity."""
-        faults = self._panel.panel_faults
-        return "\n".join(faults) if faults else "No faults"
-
-    @property
-    def name(self) -> str:
-        """The name for this faults entity."""
-        return "Faults"
+SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
+    *[
+        BoschAlarmSensorEntityDescription(
+            key=f"alarms_{key}",
+            translation_key=f"alarms_{key}",
+            value_fn=priority_value_fn(priority_type),
+            observe_alarms=True,
+        )
+        for key, priority_type in ALARM_TYPES.items()
+    ],
+    BoschAlarmSensorEntityDescription(
+        key="faulting_points",
+        translation_key="faulting_points",
+        value_fn=lambda area: area.faults,
+        observe_ready=True,
+    ),
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a sensor for tracking panel history."""
+    """Set up bosch alarm sensors."""
 
-    panel_conn = config_entry.runtime_data
-    async_add_entities([PanelHistorySensor(panel_conn), PanelFaultsSensor(panel_conn)])
+    panel = config_entry.runtime_data
+    unique_id = config_entry.unique_id or config_entry.entry_id
+
+    async_add_entities(
+        BoschAreaSensor(panel, area_id, unique_id, template)
+        for area_id in panel.areas
+        for template in SENSOR_TYPES
+    )
+
+
+PARALLEL_UPDATES = 0
+
+
+class BoschAreaSensor(BoschAlarmAreaEntity, SensorEntity):
+    """An area sensor entity for a bosch alarm panel."""
+
+    entity_description: BoschAlarmSensorEntityDescription
+
+    def __init__(
+        self,
+        panel: Panel,
+        area_id: int,
+        unique_id: str,
+        entity_description: BoschAlarmSensorEntityDescription,
+    ) -> None:
+        """Set up an area sensor entity for a bosch alarm panel."""
+        super().__init__(
+            panel,
+            area_id,
+            unique_id,
+            entity_description.observe_alarms,
+            entity_description.observe_ready,
+            entity_description.observe_status,
+        )
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{self._area_unique_id}_{entity_description.key}"
+
+    @property
+    def native_value(self) -> str | int:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self._area)

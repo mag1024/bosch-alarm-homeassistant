@@ -2,53 +2,155 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "reauth_successful": "Device successfully reconfigured"
+            "already_in_progress": "Configuration flow is already in progress",
+            "device_mismatch": "Please ensure you reconfigure against the same device.",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{model} ({host})",
         "step": {
+            "auth": {
+                "data": {
+                    "installer_code": "Installer code",
+                    "password": "Password",
+                    "user_code": "User code"
+                },
+                "data_description": {
+                    "installer_code": "The installer code from your panel",
+                    "password": "The Mode 2 automation code from your panel",
+                    "user_code": "The user code from your panel"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "installer_code": "Installer code",
+                    "password": "Password",
+                    "user_code": "User code"
+                },
+                "data_description": {
+                    "installer_code": "The installer code from your panel",
+                    "password": "The Mode 2 automation code from your panel",
+                    "user_code": "The user code from your panel"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Port"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Bosch alarm panel",
+                    "port": "The port used to connect to your Bosch alarm panel. This is usually 7700"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "area_ready_to_arm_away": {
+                "name": "Area ready to arm away",
+                "state": {
+                    "off": "Not ready",
+                    "on": "Ready"
                 }
             },
-            "auth": {
-                "data": {
-                    "password": "Automation code",
-                    "installer_code": "Installer code",
-                    "user_code": "User code"
-                },
-                "data_description": {
-                    "password": "The Automation Code is required to access all panels using the Mode 2 protocol. It can be configured via the A-Link Plus or the Remote Programming Software (RPS). It needs to be set to a string that is at least 10 characters.",
-                    "installer_code": "The Installer Code is used to access the configuration interface. Typically, it is a 4 digit numeric pin.",
-                    "user_code": "The User Code is the code used to arm the panel. Typically, it is a 4 digit numeric pin."
+            "area_ready_to_arm_home": {
+                "name": "Area ready to arm home",
+                "state": {
+                    "off": "Not ready",
+                    "on": "Ready"
                 }
+            },
+            "panel_fault_ac_fail": {
+                "name": "AC Failure"
+            },
+            "panel_fault_battery_mising": {
+                "name": "Battery missing"
+            },
+            "panel_fault_fail_to_call_rps_since_rps_hang_up": {
+                "name": "Failure to call RPS since RPS hang up"
+            },
+            "panel_fault_log_overflow": {
+                "name": "Log overflow"
+            },
+            "panel_fault_log_threshold": {
+                "name": "Log threshold reached"
+            },
+            "panel_fault_parameter_crc_fail_in_pif": {
+                "name": "CRC failure in panel configuration"
+            },
+            "panel_fault_phone_line_failure": {
+                "name": "Phone line failure"
+            },
+            "panel_fault_point_bus_fail_since_rps_hang_up": {
+                "name": "Point bus failure since RPS hang up"
+            },
+            "panel_fault_sdi_fail_since_rps_hang_up": {
+                "name": "SDI failure since RPS hang up"
+            },
+            "panel_fault_user_code_tamper_since_rps_hang_up": {
+                "name": "User code tamper since RPS hang up"
             }
-        }
-    },
-    "options": {
-        "error": {
-            "unknown": "Unexpected error"
         },
-        "step": {
-            "init": {
-                "data": {
-                    "code": "Arming code"
-                },
-                "data_description": {
-                    "code": "The arming code is used to protect the arm/disarm operations locally within Home Assistant. It does not have to match any of the codes configured in the panel."
+        "sensor": {
+            "alarms_burglary": {
+                "name": "Burglary alarm issues",
+                "state": {
+                    "alarm": "Alarm",
+                    "no_issues": "No issues",
+                    "supervisory": "Supervisory",
+                    "trouble": "Trouble"
                 }
+            },
+            "alarms_fire": {
+                "name": "Fire alarm issues",
+                "state": {
+                    "alarm": "Alarm",
+                    "no_issues": "No issues",
+                    "supervisory": "Supervisory",
+                    "trouble": "Trouble"
+                }
+            },
+            "alarms_gas": {
+                "name": "Gas alarm issues",
+                "state": {
+                    "alarm": "Alarm",
+                    "no_issues": "No issues",
+                    "supervisory": "Supervisory",
+                    "trouble": "Trouble"
+                }
+            },
+            "faulting_points": {
+                "name": "Faulting points",
+                "unit_of_measurement": "points"
+            }
+        },
+        "switch": {
+            "cycling": {
+                "name": "Momentarily unlocked"
+            },
+            "locked": {
+                "name": "Locked"
+            },
+            "secured": {
+                "name": "Secured"
             }
         }
     },
-    "services": {
-      "set_date_time": {
-        "name": "Set panel date and time",
-        "description": "Set the panels date and time"
-      }
+    "exceptions": {
+        "authentication_failed": {
+            "message": "Incorrect credentials for panel."
+        },
+        "cannot_connect": {
+            "message": "Could not connect to panel."
+        },
+        "incorrect_door_state": {
+            "message": "Door cannot be manipulated while it is momentarily unlocked."
+        }
     }
 }
