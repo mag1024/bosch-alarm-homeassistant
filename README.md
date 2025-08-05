@@ -1,3 +1,8 @@
+## Upstreamed!
+
+As of Home Assistant _2025.6_, this integration is part of Home Assistant.
+This repository will no longer be updated. All users are encouraged to update to the build-in version.
+
 ### Home Assistant integration for Bosch Alarm Panels, using the _Mode 2_ API.
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
