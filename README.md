@@ -1,7 +1,11 @@
 ## Upstreamed!
 
-As of Home Assistant _2025.6_, this integration is part of Home Assistant.
-This repository will no longer be updated. All users are encouraged to update to the build-in version.
+**As of Home Assistant _2025.6_, this integration is part of Home Assistant.**
+**This repository will no longer be updated. All users are encouraged to update to the build-in version.**
+
+Please see [bosch-alarm-mode2](https://github.com/mag1024/bosch-alarm-mode2)'s [README](https://github.com/mag1024/bosch-alarm-mode2?tab=readme-ov-file#issues) for contact points.
+
+-----
 
 ### Home Assistant integration for Bosch Alarm Panels, using the _Mode 2_ API.
 
